@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function SettingsPage() {
   return (
@@ -10,88 +12,130 @@ export default function SettingsPage() {
         <p className="text-muted-foreground">Manage your account settings and preferences.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Account Management */}
         <Card>
           <CardHeader>
-            <CardTitle>Notifications</CardTitle>
-            <CardDescription>Configure how you receive notifications.</CardDescription>
+            <CardTitle>Account Management</CardTitle>
+            <CardDescription>Manage your account settings and security.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Button variant="outline" className="w-full justify-start">
+                Change Email
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                Change Password
+              </Button>
+            </div>
+            <div className="flex justify-center pt-2">
+              <Button variant="destructive" className="w-fit">
+                Delete Account
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Subscription Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Subscription Preferences</CardTitle>
+            <CardDescription>Customize how you view and manage subscriptions.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
-                <span>Email Notifications</span>
-                <span className="text-xs font-normal text-muted-foreground">Receive notifications via email.</span>
-              </Label>
-              <Switch id="email-notifications" defaultChecked />
+            <div className="space-y-2">
+              <Label>Preferred Billing Cycle Display</Label>
+              <Select defaultValue="monthly">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select billing cycle display" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                  <SelectItem value="both">Show Both</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="payment-reminders" className="flex flex-col space-y-1">
-                <span>Payment Reminders</span>
-                <span className="text-xs font-normal text-muted-foreground">Get reminded before payments are due.</span>
-              </Label>
-              <Switch id="payment-reminders" defaultChecked />
+            <div className="space-y-2">
+              <Label>Reminder Settings</Label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="email-reminders" className="flex flex-col space-y-1">
+                    <span>Email Reminders</span>
+                  </Label>
+                  <Switch id="email-reminders" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
+                    <span>Push Notifications</span>
+                  </Label>
+                  <Switch id="push-notifications" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="in-app-alerts" className="flex flex-col space-y-1">
+                    <span>In-App Alerts</span>
+                  </Label>
+                  <Switch id="in-app-alerts" defaultChecked />
+                </div>
+              </div>
             </div>
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="price-changes" className="flex flex-col space-y-1">
-                <span>Price Change Alerts</span>
+          </CardContent>
+        </Card>
+
+        {/* Data & Privacy */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Data & Privacy</CardTitle>
+            <CardDescription>Manage your data and privacy settings.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Button variant="outline" className="w-full justify-start">
+                Export Data (CSV)
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                Export Data (PDF)
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                Backup & Restore Data
+              </Button>
+            </div>
+            <div className="flex justify-center pt-2">
+              <Button variant="destructive" className="w-fit">
+                Delete All Subscription Data
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notification Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Notification Settings</CardTitle>
+            <CardDescription>Configure your notification preferences.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="renewal-reminders" className="flex flex-col space-y-1">
+                <span>Renewal Reminders</span>
                 <span className="text-xs font-normal text-muted-foreground">
-                  Get notified when subscription prices change.
+                  Get notified before subscriptions renew
                 </span>
               </Label>
-              <Switch id="price-changes" defaultChecked />
+              <Switch id="renewal-reminders" defaultChecked />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Customize how the application looks.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="dark-mode" className="flex flex-col space-y-1">
-                <span>Dark Mode</span>
-                <span className="text-xs font-normal text-muted-foreground">Use dark mode by default.</span>
-              </Label>
-              <Switch id="dark-mode" />
-            </div>
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="compact-view" className="flex flex-col space-y-1">
-                <span>Compact View</span>
-                <span className="text-xs font-normal text-muted-foreground">Display more items on screen.</span>
-              </Label>
-              <Switch id="compact-view" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Currency</CardTitle>
-            <CardDescription>Set your preferred currency.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="usd" className="flex flex-col space-y-1">
-                <span>USD ($)</span>
-                <span className="text-xs font-normal text-muted-foreground">United States Dollar</span>
-              </Label>
-              <Switch id="usd" defaultChecked />
-            </div>
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="eur" className="flex flex-col space-y-1">
-                <span>EUR (€)</span>
-                <span className="text-xs font-normal text-muted-foreground">Euro</span>
-              </Label>
-              <Switch id="eur" />
-            </div>
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="gbp" className="flex flex-col space-y-1">
-                <span>GBP (£)</span>
-                <span className="text-xs font-normal text-muted-foreground">British Pound</span>
-              </Label>
-              <Switch id="gbp" />
+            <div className="space-y-2">
+              <Label>Reminder Frequency</Label>
+              <Select defaultValue="3days">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select reminder frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="3days">3 Days Before</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
