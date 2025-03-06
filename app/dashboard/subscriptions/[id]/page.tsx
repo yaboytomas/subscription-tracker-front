@@ -157,6 +157,7 @@ export default function EditSubscriptionPage({ params }: { params: { id: string 
       const updatedSubscription = {
         ...formData,
         id: params.id,
+        nextPayment: "2025-04-15",
       }
       
       // Update the subscription in the list
