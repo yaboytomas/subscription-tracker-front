@@ -381,35 +381,54 @@ export function SubscriptionStats() {
               {selectedSubscription?.category || "Loading..."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="text-sm font-medium text-muted-foreground">Monthly Cost</div>
-                <div className="text-2xl font-bold">
-                  ${selectedSubscription?.billingCycle === "Yearly" 
-                    ? ((selectedSubscription?.price || 0) / 12).toFixed(2) 
-                    : (selectedSubscription?.price || 0).toFixed(2)}
+          
+          <div className="space-y-4">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-lg">
+                    {selectedSubscription?.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedSubscription?.category}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold">
+                    ${(selectedSubscription?.billingCycle === "Yearly" 
+                      ? (selectedSubscription?.price || 0) / 12 
+                      : selectedSubscription?.price || 0).toFixed(2)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">per month</div>
                 </div>
               </div>
-              <div className="space-y-1">
-                <div className="text-sm font-medium text-muted-foreground">Annual Cost</div>
-                <div className="text-2xl font-bold">
+              
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Billing Cycle</span>
+                <span className="font-medium">
+                  {selectedSubscription?.billingCycle}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Next Payment</span>
+                <span className="font-medium">
+                  {selectedSubscription?.nextPayment ? formatDate(selectedSubscription.nextPayment) : "N/A"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Annual Cost</span>
+                <span className="font-medium">
                   ${calculateAnnualCost(selectedSubscription).toFixed(2)}
-                </div>
+                </span>
               </div>
             </div>
-            <div className="space-y-1">
-              <div className="text-sm font-medium text-muted-foreground">Billing Cycle</div>
-              <div className="text-lg">{selectedSubscription?.billingCycle || "N/A"}</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-sm font-medium text-muted-foreground">Next Payment</div>
-              <div className="text-lg">
-                {selectedSubscription?.nextPayment 
-                  ? formatDate(selectedSubscription.nextPayment)
-                  : "N/A"}
-              </div>
-            </div>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setSelectedSubscription(null)}
+            >
+              Back to Overview
+            </Button>
           </div>
           <div className="flex justify-end">
             <Button
