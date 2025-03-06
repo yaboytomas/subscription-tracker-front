@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UpcomingReminders } from "@/components/upcoming-reminders"
-import ReminderTimeline from "@/components/reminder-timeline"
+import { PastPayments } from "@/components/past-payments"
 
 export default function RemindersPage() {
   return (
@@ -14,7 +14,7 @@ export default function RemindersPage() {
       <Tabs defaultValue="upcoming" className="space-y-4">
         <TabsList>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
+          <TabsTrigger value="past">Past</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming" className="space-y-4">
           <Card>
@@ -27,14 +27,14 @@ export default function RemindersPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="timeline" className="space-y-4">
+        <TabsContent value="past" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Reminder Timeline</CardTitle>
-              <CardDescription>Visualize your subscription payments over time.</CardDescription>
+              <CardTitle>Past Payments</CardTitle>
+              <CardDescription>View your past subscription payments.</CardDescription>
             </CardHeader>
             <CardContent>
-              <ReminderTimeline />
+              <PastPayments />
             </CardContent>
           </Card>
         </TabsContent>
