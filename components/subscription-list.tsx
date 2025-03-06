@@ -138,18 +138,11 @@ const categories = [
 
 const billingCycles = ["Monthly", "Quarterly", "Yearly", "Weekly", "Biweekly", "Custom"]
 
-export function SubscriptionList({ 
-  selectedCategory, 
-  isAddDialogOpen, 
-  setIsAddDialogOpen 
-}: { 
-  selectedCategory: string
-  isAddDialogOpen: boolean
-  setIsAddDialogOpen: (open: boolean) => void
-}) {
+export function SubscriptionList() {
   const { toast } = useToast()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [subscriptionList, setSubscriptionList] = useState(subscriptions)
   const [sortField, setSortField] = useState<SortField>("name")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
@@ -171,11 +164,7 @@ export function SubscriptionList({
     }
   }
 
-  const filteredSubscriptions = selectedCategory === "All" 
-    ? subscriptionList 
-    : subscriptionList.filter(sub => sub.category === selectedCategory)
-
-  const sortedSubscriptions = [...filteredSubscriptions].sort((a, b) => {
+  const sortedSubscriptions = [...subscriptionList].sort((a, b) => {
     const aValue = a[sortField]
     const bValue = b[sortField]
 
@@ -242,6 +231,13 @@ export function SubscriptionList({
 
   return (
     <>
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+          <PlusCircle className="h-4 w-4" />
+          Add Subscription
+        </Button>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
