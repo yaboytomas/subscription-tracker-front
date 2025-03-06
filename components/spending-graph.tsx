@@ -2,12 +2,13 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ReferenceLine } from "recharts"
 import { useTheme } from "next-themes"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DollarSign } from "lucide-react"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 // This would come from your data source
 const subscriptions = [
@@ -78,10 +79,86 @@ const COLORS = {
   ]
 }
 
+// Generate monthly data showing spending history and projections
+const generateTimeData = (months: number) => {
+  const data = []
+  const today = new Date()
+  
+  // Calculate current total monthly spending
+  const currentMonthlyTotal = subscriptions.reduce((total, sub) => {
+    return total + (sub.billingCycle === "Yearly" ? sub.price / 12 : sub.price)
+  }, 0)
+
+  // For 1-year view, show Jan-Dec of current year
+  if (months === 12) {
+    const currentYear = today.getFullYear()
+    
+    for (let month = 0; month < 12; month++) {
+      const date = new Date(currentYear, month, 1)
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+      const isPast = date <= today
+      const isProjection = !isPast
+      
+      // For this example, let's show some subscription changes
+      let monthTotal = currentMonthlyTotal
+      let changeText = ''
+      
+      // Simulate some changes (you would replace this with real data)
+      if (monthKey === 'Feb 24') {
+        monthTotal -= 15.99 // Netflix wasn't subscribed yet
+        changeText = 'Before Netflix'
+      } else if (monthKey === 'Mar 24') {
+        monthTotal += 14.99 // Will add new gaming subscription
+        changeText = '+ Gaming Sub ($14.99)'
+      } else if (monthKey === 'May 24') {
+        monthTotal -= 52.99 // Planning to cancel Adobe
+        changeText = '- Adobe CC ($52.99)'
+      }
+      
+      data.push({
+        month: monthKey,
+        amount: parseFloat(monthTotal.toFixed(2)),
+        isProjection,
+        changeText
+      })
+    }
+  } else {
+    // For 3M and 6M views, show rolling months including projections
+    for (let i = months - 1; i >= -3; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1)
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+      
+      let monthTotal = currentMonthlyTotal
+      let changeText = ''
+      
+      if (monthKey === 'Feb 24') {
+        monthTotal -= 15.99
+        changeText = 'Before Netflix'
+      } else if (monthKey === 'Mar 24') {
+        monthTotal += 14.99
+        changeText = '+ Gaming Sub ($14.99)'
+      } else if (monthKey === 'May 24') {
+        monthTotal -= 52.99
+        changeText = '- Adobe CC ($52.99)'
+      }
+      
+      data.push({
+        month: monthKey,
+        amount: parseFloat(monthTotal.toFixed(2)),
+        isProjection: i < 0,
+        changeText
+      })
+    }
+  }
+  
+  return data
+}
+
 export function SpendingGraph() {
   const { theme } = useTheme()
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [timeRange, setTimeRange] = useState("3")
 
   const colors = theme === 'dark' ? COLORS.dark : COLORS.light
 
@@ -96,8 +173,11 @@ export function SpendingGraph() {
 
   const totalSpending = data.reduce((sum, item) => sum + item.value, 0)
 
+  const timeData = generateTimeData(parseInt(timeRange))
+  const currentTotal = timeData.find(d => !d.isProjection)?.amount || 0
+
   return (
-    <>
+    <div className="grid gap-4 md:grid-cols-2">
       <Card className="w-full cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog(true)}>
         <CardHeader>
           <CardTitle className="text-sm font-medium">Monthly Spending by Category</CardTitle>
@@ -157,6 +237,100 @@ export function SpendingGraph() {
         </CardContent>
       </Card>
 
+      <Card className="w-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium">Monthly Spending Timeline</CardTitle>
+            <ToggleGroup type="single" value={timeRange} onValueChange={(value) => value && setTimeRange(value)}>
+              <ToggleGroupItem value="3" aria-label="3 Months">
+                3M
+              </ToggleGroupItem>
+              <ToggleGroupItem value="6" aria-label="6 Months">
+                6M
+              </ToggleGroupItem>
+              <ToggleGroupItem value="12" aria-label="1 Year">
+                1Y
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={timeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'hsl(var(--border))' : '#e5e7eb'} />
+                <XAxis 
+                  dataKey="month" 
+                  stroke={theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000'}
+                />
+                <YAxis 
+                  stroke={theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000'}
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <Tooltip
+                  contentStyle={{ 
+                    backgroundColor: theme === 'dark' ? 'hsl(var(--card))' : '#ffffff',
+                    borderColor: theme === 'dark' ? 'hsl(var(--border))' : '#e5e7eb',
+                    borderRadius: '0.5rem',
+                    padding: '0.75rem',
+                    color: theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000',
+                  }}
+                  formatter={(value: number, name: string, props: any) => {
+                    const entry = props.payload
+                    const parts = [`$${value.toFixed(2)} per month`]
+                    if (entry.changeText) {
+                      parts.push(entry.changeText)
+                    }
+                    if (entry.isProjection) {
+                      parts.push('(Projected)')
+                    }
+                    return [parts.join('\n'), '']
+                  }}
+                />
+                {/* Current spending reference line */}
+                <ReferenceLine
+                  y={currentTotal}
+                  stroke={colors[1]}
+                  strokeDasharray="3 3"
+                  label={{
+                    value: 'Current',
+                    fill: theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000',
+                    position: 'right'
+                  }}
+                />
+                {/* Past months */}
+                <Bar
+                  dataKey="amount"
+                  fill={colors[0]}
+                  opacity={(entry) => entry.isProjection ? 0.7 : 1}
+                  stroke={theme === 'dark' ? 'hsl(var(--border))' : '#e5e7eb'}
+                  strokeWidth={1}
+                >
+                  {timeData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.isProjection ? colors[1] : colors[0]}
+                      opacity={entry.isProjection ? 0.7 : 1}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 space-y-1 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3" style={{ backgroundColor: colors[0] }}></span>
+              <span>Past Spending</span>
+              <span className="h-3 w-3 ml-4" style={{ backgroundColor: colors[1], opacity: 0.7 }}></span>
+              <span>Projected Spending</span>
+            </div>
+            <p className="text-xs">
+              Hover over bars to see details. Dashed line shows your current monthly spending level.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -211,6 +385,6 @@ export function SpendingGraph() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 } 
