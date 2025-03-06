@@ -35,14 +35,7 @@ export function DashboardNav() {
   return (
     <div className="group flex w-16 flex-col border-r bg-background p-2 md:w-60">
       <div className="flex flex-col gap-2">
-        <Link href="/dashboard/subscriptions/new" legacyBehavior passHref>
-          <Button variant="default" className="justify-start gap-2 w-full" asChild>
-            <a>
-              <PlusCircle className="h-4 w-4" />
-              <span className="hidden md:inline-flex">Add Subscription</span>
-            </a>
-          </Button>
-        </Link>
+        
         <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
           {navItems.map((item, index) => (
             <Link key={index} href={item.href} legacyBehavior passHref>

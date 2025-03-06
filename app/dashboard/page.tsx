@@ -55,9 +55,11 @@ export default function DashboardPage() {
         </TabsContent>
         <TabsContent value="reminders" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Reminders</CardTitle>
-              <CardDescription>View your upcoming subscription payments.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Upcoming Reminders</CardTitle>
+                <CardDescription>View your upcoming subscription payments.</CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">Don&apos;t forget about these upcoming payments.</p>
