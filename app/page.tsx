@@ -1,34 +1,84 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
+import { motion } from "framer-motion"
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+}
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+}
+
+const headerItem = {
+  hidden: { opacity: 0, y: -20 },
+  show: { opacity: 1, y: 0 }
+}
+
+const previewCard = {
+  hidden: { opacity: 0, scale: 0.95 },
+  show: { 
+    opacity: 1, 
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }
+  }
+}
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <motion.div 
+      className="flex min-h-screen flex-col"
+      initial="hidden"
+      animate="show"
+      variants={container}
+    >
+      <motion.header 
+        className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        variants={headerItem}
+      >
         <div className="w-full px-4 flex h-14 items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl">
+          <motion.div 
+            className="flex items-center gap-2 font-bold text-xl"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300, damping: 10 }}
+          >
             <span className="text-primary">Sub</span>
             <span>0</span>
-          </div>
+          </motion.div>
           <div className="flex items-center gap-2">
             <ModeToggle />
             <Link href="/login">
-              <Button variant="outline" size="sm">
-                Login
-              </Button>
+              <Button variant="outline" size="sm">Login</Button>
             </Link>
             <Link href="/signup">
               <Button size="sm">Sign Up</Button>
             </Link>
           </div>
         </div>
-      </header>
+      </motion.header>
+      
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
           <div className="w-full px-4 md:px-6">
             <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:gap-12 xl:grid-cols-[1fr_1fr]">
-              <div className="flex flex-col justify-center space-y-4">
+              <motion.div 
+                className="flex flex-col justify-center space-y-4"
+                variants={item}
+              >
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
                     Never forget a subscription again
@@ -50,80 +100,99 @@ export default function Home() {
                     </Button>
                   </Link>
                 </div>
-              </div>
-              <div className="flex items-center justify-center">
-                <div className="relative h-[350px] w-full overflow-hidden rounded-xl bg-muted/50 p-4 md:h-[450px]">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20" />
-                  <div className="relative z-10 flex h-full flex-col items-center justify-center space-y-4 text-center">
-                    <div className="space-y-2">
-                      <h2 className="text-2xl font-bold">Dashboard Preview</h2>
-                      <p className="text-muted-foreground">Track all your subscriptions and upcoming payments</p>
-                    </div>
-                    <div className="w-full max-w-sm rounded-lg border bg-background p-4 shadow-lg">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">Netflix</div>
-                          <div className="text-sm font-bold text-primary">$15.99</div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">Spotify</div>
-                          <div className="text-sm font-bold text-primary">$9.99</div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">Adobe Creative Cloud</div>
-                          <div className="text-sm font-bold text-primary">$52.99</div>
-                        </div>
+              </motion.div>
+              
+              <motion.div 
+                className="relative h-[350px] w-full overflow-hidden rounded-xl bg-muted/50 p-4 md:h-[450px]"
+                variants={previewCard}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20" />
+                <div className="relative z-10 flex h-full flex-col items-center justify-center space-y-4 text-center">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold">Dashboard Preview</h2>
+                    <p className="text-muted-foreground">Track all your subscriptions and upcoming payments</p>
+                  </div>
+                  <motion.div 
+                    className="w-full max-w-sm rounded-lg border bg-background p-4 shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 10 }}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">Netflix</div>
+                        <div className="text-sm font-bold text-primary">$15.99</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">Spotify</div>
+                        <div className="text-sm font-bold text-primary">$9.99</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">Adobe Creative Cloud</div>
+                        <div className="text-sm font-bold text-primary">$52.99</div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
+        
+        <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="w-full px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <motion.div 
+              className="flex flex-col items-center justify-center space-y-4 text-center"
+              variants={item}
+            >
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Features</h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   Everything you need to manage your subscriptions effectively
                 </p>
               </div>
-            </div>
+            </motion.div>
             <div className="grid grid-cols-1 gap-6 py-12 md:grid-cols-3">
-              <div className="flex flex-col items-center space-y-2 rounded-lg border bg-background p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  1
-                </div>
-                <h3 className="text-xl font-bold">Track Subscriptions</h3>
-                <p className="text-center text-muted-foreground">
-                  Keep all your subscriptions in one place with detailed information
-                </p>
-              </div>
-              <div className="flex flex-col items-center space-y-2 rounded-lg border bg-background p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  2
-                </div>
-                <h3 className="text-xl font-bold">Get Reminders</h3>
-                <p className="text-center text-muted-foreground">
-                  Never miss a payment with timely reminders before you&apos;re charged
-                </p>
-              </div>
-              <div className="flex flex-col items-center space-y-2 rounded-lg border bg-background p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  3
-                </div>
-                <h3 className="text-xl font-bold">Save Money</h3>
-                <p className="text-center text-muted-foreground">
-                  Identify unused subscriptions and save money by canceling them
-                </p>
-              </div>
+              {[
+                {
+                  title: "Track Subscriptions",
+                  description: "Keep all your subscriptions in one place with detailed information",
+                  number: 1
+                },
+                {
+                  title: "Get Reminders",
+                  description: "Never miss a payment with timely reminders before you're charged",
+                  number: 2
+                },
+                {
+                  title: "Save Money",
+                  description: "Identify unused subscriptions and save money by canceling them",
+                  number: 3
+                }
+              ].map((feature, index) => (
+                <motion.div
+                  key={feature.number}
+                  className="flex flex-col items-center space-y-2 rounded-lg border bg-background p-6 shadow-sm"
+                  variants={item}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 10 }}
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    {feature.number}
+                  </div>
+                  <h3 className="text-xl font-bold">{feature.title}</h3>
+                  <p className="text-center text-muted-foreground">
+                    {feature.description}
+                  </p>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
       </main>
-      <footer className="border-t py-6 md:py-0">
+      <motion.footer 
+        className="border-t py-6 md:py-0"
+        variants={item}
+      >
         <div className="w-full px-4 flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
             © 2025 Sub0. All rights reserved.
@@ -140,8 +209,8 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </footer>
-    </div>
+      </motion.footer>
+    </motion.div>
   )
 }
 
