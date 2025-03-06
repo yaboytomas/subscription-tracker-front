@@ -35,6 +35,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { motion } from "framer-motion"
 
 // Sample data - would be fetched from API in a real app
 const subscriptions = [
@@ -141,6 +142,27 @@ const billingCycles = ["Monthly", "Quarterly", "Yearly", "Weekly", "Biweekly", "
 interface SubscriptionListProps {
   isAddDialogOpen: boolean
   setIsAddDialogOpen: (open: boolean) => void
+}
+
+const rowVariants = {
+  hidden: { opacity: 0, x: -20 },
+  show: { 
+    opacity: 1, 
+    x: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }
+  },
+  hover: {
+    scale: 1.01,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 10
+    }
+  }
 }
 
 export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: SubscriptionListProps) {
@@ -310,8 +332,15 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: Subscr
                 </TableCell>
               </TableRow>
             ) : (
-              sortedSubscriptions.map((subscription) => (
-                <TableRow key={subscription.id}>
+              sortedSubscriptions.map((subscription, index) => (
+                <motion.tr
+                  key={subscription.id}
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="show"
+                  whileHover="hover"
+                  transition={{ delay: index * 0.05 }}
+                >
                   <TableCell className="font-medium">{subscription.name}</TableCell>
                   <TableCell>${parseFloat(subscription.price).toFixed(2)}</TableCell>
                   <TableCell>{subscription.billingCycle}</TableCell>
@@ -347,7 +376,7 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: Subscr
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
-                </TableRow>
+                </motion.tr>
               ))
             )}
           </TableBody>

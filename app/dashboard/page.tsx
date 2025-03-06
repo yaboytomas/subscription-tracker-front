@@ -75,12 +75,7 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
           <TabsContent value="subscriptions">
-            <motion.div
-              variants={hoverCard}
-              whileHover="hover"
-            >
-              <SubscriptionsSection />
-            </motion.div>
+            <SubscriptionsSection />
           </TabsContent>
         </Tabs>
       </motion.div>
