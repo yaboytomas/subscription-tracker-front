@@ -3,6 +3,7 @@
 import { CalendarClock } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
 // Sample data - would be fetched from API in a real app
 const calculateDaysLeft = (dateString: string) => {
@@ -76,56 +77,69 @@ export function UpcomingReminders() {
   return (
     <div className="space-y-4">
       {reminders.length === 0 ? (
-        <div className="flex h-[200px] flex-col items-center justify-center rounded-md border border-dashed p-8 text-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex h-[200px] flex-col items-center justify-center rounded-md border border-dashed p-8 text-center"
+        >
           <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
             <CalendarClock className="h-10 w-10 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">No upcoming reminders</h3>
             <p className="mt-2 text-sm text-muted-foreground">You don&apos;t have any upcoming subscription payments.</p>
           </div>
-        </div>
+        </motion.div>
       ) : (
-        reminders.map((reminder) => (
-          <Card key={reminder.id} className="overflow-hidden">
-            <CardContent className="p-0">
-              <div className="flex items-center">
-                <div
-                  className={cn(
-                    "flex h-full w-2 flex-shrink-0",
-                    reminder.daysLeft < 0
-                      ? "bg-destructive"
-                      : reminder.daysLeft === 0
-                        ? "bg-orange-500"
-                        : reminder.daysLeft <= 3
-                          ? "bg-yellow-500"
-                          : "bg-green-500",
-                  )}
-                />
-                <div className="flex flex-1 items-center justify-between p-4">
-                  <div className="grid gap-1">
-                    <div className="font-semibold">{reminder.name}</div>
-                    <div className="text-sm text-muted-foreground">{formatDate(reminder.date)}</div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="font-semibold">${reminder.price.toFixed(2)}</div>
-                    <div
-                      className={cn(
-                        "text-xs",
-                        reminder.daysLeft < 0
-                          ? "text-destructive"
-                          : reminder.daysLeft === 0
-                            ? "text-orange-500"
-                            : reminder.daysLeft <= 3
-                              ? "text-yellow-500"
-                              : "text-green-500",
-                      )}
-                    >
-                      {getDaysText(reminder.daysLeft)}
+        reminders.map((reminder, index) => (
+          <motion.div
+            key={reminder.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300, damping: 10 }}
+          >
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex items-center">
+                  <div
+                    className={cn(
+                      "flex h-full w-2 flex-shrink-0",
+                      reminder.daysLeft < 0
+                        ? "bg-destructive"
+                        : reminder.daysLeft === 0
+                          ? "bg-orange-500"
+                          : reminder.daysLeft <= 3
+                            ? "bg-yellow-500"
+                            : "bg-green-500",
+                    )}
+                  />
+                  <div className="flex flex-1 items-center justify-between p-4">
+                    <div className="grid gap-1">
+                      <div className="font-semibold">{reminder.name}</div>
+                      <div className="text-sm text-muted-foreground">{formatDate(reminder.date)}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="font-semibold">${reminder.price.toFixed(2)}</div>
+                      <div
+                        className={cn(
+                          "text-xs",
+                          reminder.daysLeft < 0
+                            ? "text-destructive"
+                            : reminder.daysLeft === 0
+                              ? "text-orange-500"
+                              : reminder.daysLeft <= 3
+                                ? "text-yellow-500"
+                                : "text-green-500",
+                        )}
+                      >
+                        {getDaysText(reminder.daysLeft)}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))
       )}
     </div>
