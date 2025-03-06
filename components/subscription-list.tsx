@@ -169,6 +169,7 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: Subscr
   const [subscriptionList, setSubscriptionList] = useState(subscriptions)
   const [sortField, setSortField] = useState<SortField>("name")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [editingSubscription, setEditingSubscription] = useState<any>(null)
   const [newSubscription, setNewSubscription] = useState({
     name: "",
     price: "",
@@ -250,6 +251,31 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: Subscr
       title: "Subscription added",
       description: "Your new subscription has been added successfully.",
     })
+  }
+
+  const handleEditSubscription = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editingSubscription) {
+      const updatedSubscription = {
+        ...editingSubscription,
+        id: editingSubscription.id,
+      }
+      
+      // Update the subscription in the list
+      const index = subscriptionList.findIndex(sub => sub.id === editingSubscription.id)
+      if (index !== -1) {
+        const newList = [...subscriptionList]
+        newList[index] = updatedSubscription
+        setSubscriptionList(newList)
+      }
+
+      toast({
+        title: "Subscription updated",
+        description: "Your subscription has been updated successfully.",
+      })
+      
+      setEditingSubscription(null)
+    }
   }
 
   return (
@@ -354,11 +380,9 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: Subscr
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/dashboard/subscriptions/${subscription.id}`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </Link>
+                        <DropdownMenuItem onClick={() => setEditingSubscription(subscription)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -517,6 +541,123 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: Subscr
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Subscription Dialog */}
+      <Dialog open={!!editingSubscription} onOpenChange={(open) => !open && setEditingSubscription(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Subscription</DialogTitle>
+            <DialogDescription>
+              Update the details of your subscription.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubscription}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Subscription Name</Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  placeholder="Netflix, Spotify, etc."
+                  required
+                  value={editingSubscription?.name || ""}
+                  onChange={(e) => setEditingSubscription({ ...editingSubscription, name: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-price">Price</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      id="edit-price"
+                      name="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="9.99"
+                      className="pl-7"
+                      required
+                      value={editingSubscription?.price || ""}
+                      onChange={(e) => setEditingSubscription({ ...editingSubscription, price: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Select 
+                    value={editingSubscription?.category || ""} 
+                    onValueChange={(value) => setEditingSubscription({ ...editingSubscription, category: value })}
+                  >
+                    <SelectTrigger id="edit-category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-billingCycle">Billing Cycle</Label>
+                  <Select
+                    value={editingSubscription?.billingCycle || ""}
+                    onValueChange={(value) => setEditingSubscription({ ...editingSubscription, billingCycle: value })}
+                  >
+                    <SelectTrigger id="edit-billingCycle">
+                      <SelectValue placeholder="Select billing cycle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {billingCycles.map((cycle) => (
+                        <SelectItem key={cycle} value={cycle}>
+                          {cycle}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-startDate">Start Date</Label>
+                  <Input
+                    id="edit-startDate"
+                    name="startDate"
+                    type="date"
+                    required
+                    value={editingSubscription?.startDate || ""}
+                    onChange={(e) => setEditingSubscription({ ...editingSubscription, startDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description (Optional)</Label>
+                <Input
+                  id="edit-description"
+                  name="description"
+                  placeholder="Add notes about this subscription"
+                  value={editingSubscription?.description || ""}
+                  onChange={(e) => setEditingSubscription({ ...editingSubscription, description: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditingSubscription(null)}>
+                Cancel
+              </Button>
+              <Button type="submit">Update Subscription</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
