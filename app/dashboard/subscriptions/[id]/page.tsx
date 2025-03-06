@@ -21,6 +21,7 @@ const subscriptions = [
     billingCycle: "Monthly",
     startDate: "2023-01-15",
     description: "Premium plan with 4K streaming",
+    nextPayment: "2025-04-15",
   },
   {
     id: "2",
@@ -30,6 +31,67 @@ const subscriptions = [
     billingCycle: "Monthly",
     startDate: "2022-05-10",
     description: "Family plan",
+    nextPayment: "2025-04-10",
+  },
+  {
+    id: "3",
+    name: "Adobe Creative Cloud",
+    price: "52.99",
+    category: "Software",
+    billingCycle: "Monthly",
+    startDate: "2023-03-01",
+    description: "Creative Cloud All Apps",
+    nextPayment: "2025-04-22",
+  },
+  {
+    id: "4",
+    name: "Amazon Prime",
+    price: "139",
+    category: "Shopping",
+    billingCycle: "Yearly",
+    startDate: "2023-01-01",
+    description: "Prime membership with free shipping",
+    nextPayment: "2025-11-15",
+  },
+  {
+    id: "5",
+    name: "Disney+",
+    price: "7.99",
+    category: "Entertainment",
+    billingCycle: "Monthly",
+    startDate: "2023-06-15",
+    description: "Basic plan with ads",
+    nextPayment: "2025-04-18",
+  },
+  {
+    id: "6",
+    name: "Microsoft 365",
+    price: "99.99",
+    category: "Software",
+    billingCycle: "Yearly",
+    startDate: "2023-01-01",
+    description: "Family plan with 6 users",
+    nextPayment: "2025-08-05",
+  },
+  {
+    id: "7",
+    name: "YouTube Premium",
+    price: "11.99",
+    category: "Entertainment",
+    billingCycle: "Monthly",
+    startDate: "2023-02-01",
+    description: "Family plan",
+    nextPayment: "2025-04-12",
+  },
+  {
+    id: "8",
+    name: "iCloud Storage",
+    price: "2.99",
+    category: "Cloud Storage",
+    billingCycle: "Monthly",
+    startDate: "2023-01-01",
+    description: "50GB storage plan",
+    nextPayment: "2025-04-08",
   },
 ]
 
@@ -91,11 +153,25 @@ export default function EditSubscriptionPage({ params }: { params: { id: string 
     setIsLoading(true)
 
     try {
-      // Handle form submission
+      // In a real app, this would be an API call
+      const updatedSubscription = {
+        ...formData,
+        id: params.id,
+      }
+      
+      // Update the subscription in the list
+      const index = subscriptions.findIndex(sub => sub.id === params.id)
+      if (index !== -1) {
+        subscriptions[index] = updatedSubscription
+      }
+
       toast({
         title: "Subscription updated",
         description: "Your subscription has been updated successfully.",
       })
+      
+      // Redirect back to the subscriptions list
+      router.push("/dashboard/subscriptions")
     } catch (err) {
       console.error(err)
       toast({

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Edit, MoreHorizontal, Trash2, ArrowUpDown } from "lucide-react"
+import { Edit, MoreHorizontal, Trash2, ArrowUpDown, PlusCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -24,85 +24,136 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Sample data - would be fetched from API in a real app
 const subscriptions = [
   {
     id: "1",
     name: "Netflix",
-    price: 15.99,
+    price: "15.99",
     billingCycle: "Monthly",
     nextPayment: "2025-04-15",
     category: "Entertainment",
+    startDate: "2023-01-15",
+    description: "Premium plan with 4K streaming",
   },
   {
     id: "2",
     name: "Spotify",
-    price: 9.99,
+    price: "9.99",
     billingCycle: "Monthly",
     nextPayment: "2025-04-10",
     category: "Music",
+    startDate: "2022-05-10",
+    description: "Family plan",
   },
   {
     id: "3",
     name: "Adobe Creative Cloud",
-    price: 52.99,
+    price: "52.99",
     billingCycle: "Monthly",
     nextPayment: "2025-04-22",
     category: "Software",
+    startDate: "2023-03-01",
+    description: "Creative Cloud All Apps",
   },
   {
     id: "4",
     name: "Amazon Prime",
-    price: 139,
+    price: "139",
     billingCycle: "Yearly",
     nextPayment: "2025-11-15",
     category: "Shopping",
+    startDate: "2023-01-01",
+    description: "Prime membership with free shipping",
   },
   {
     id: "5",
     name: "Disney+",
-    price: 7.99,
+    price: "7.99",
     billingCycle: "Monthly",
     nextPayment: "2025-04-18",
     category: "Entertainment",
+    startDate: "2023-06-15",
+    description: "Basic plan with ads",
   },
   {
     id: "6",
     name: "Microsoft 365",
-    price: 99.99,
+    price: "99.99",
     billingCycle: "Yearly",
     nextPayment: "2025-08-05",
     category: "Software",
+    startDate: "2023-01-01",
+    description: "Family plan with 6 users",
   },
   {
     id: "7",
     name: "YouTube Premium",
-    price: 11.99,
+    price: "11.99",
     billingCycle: "Monthly",
     nextPayment: "2025-04-12",
     category: "Entertainment",
+    startDate: "2023-02-01",
+    description: "Family plan",
   },
   {
     id: "8",
     name: "iCloud Storage",
-    price: 2.99,
+    price: "2.99",
     billingCycle: "Monthly",
     nextPayment: "2025-04-08",
     category: "Cloud Storage",
+    startDate: "2023-01-01",
+    description: "50GB storage plan",
   },
 ]
 
 type SortField = "name" | "price" | "billingCycle" | "nextPayment" | "category"
 type SortDirection = "asc" | "desc"
 
+const categories = [
+  "Entertainment",
+  "Music",
+  "Software",
+  "Shopping",
+  "Cloud Storage",
+  "Gaming",
+  "Fitness",
+  "News",
+  "Food",
+  "Other",
+]
+
+const billingCycles = ["Monthly", "Quarterly", "Yearly", "Weekly", "Biweekly", "Custom"]
+
 export function SubscriptionList() {
   const { toast } = useToast()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [subscriptionList, setSubscriptionList] = useState(subscriptions)
   const [sortField, setSortField] = useState<SortField>("name")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [newSubscription, setNewSubscription] = useState({
+    name: "",
+    price: "",
+    category: "",
+    billingCycle: "",
+    startDate: "",
+    description: "",
+  })
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -152,8 +203,41 @@ export function SubscriptionList() {
     })
   }
 
+  const handleAddSubscription = (e: React.FormEvent) => {
+    e.preventDefault()
+    const newId = (subscriptionList.length + 1).toString()
+    const subscription = {
+      ...newSubscription,
+      id: newId,
+      nextPayment: new Date().toISOString().split('T')[0], // Set to today's date initially
+    }
+    
+    setSubscriptionList([...subscriptionList, subscription])
+    setIsAddDialogOpen(false)
+    setNewSubscription({
+      name: "",
+      price: "",
+      category: "",
+      billingCycle: "",
+      startDate: "",
+      description: "",
+    })
+    
+    toast({
+      title: "Subscription added",
+      description: "Your new subscription has been added successfully.",
+    })
+  }
+
   return (
     <>
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+          <PlusCircle className="h-4 w-4" />
+          Add Subscription
+        </Button>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -232,7 +316,7 @@ export function SubscriptionList() {
               sortedSubscriptions.map((subscription) => (
                 <TableRow key={subscription.id}>
                   <TableCell className="font-medium">{subscription.name}</TableCell>
-                  <TableCell>${subscription.price.toFixed(2)}</TableCell>
+                  <TableCell>${parseFloat(subscription.price).toFixed(2)}</TableCell>
                   <TableCell>{subscription.billingCycle}</TableCell>
                   <TableCell>{formatDate(subscription.nextPayment)}</TableCell>
                   <TableCell>{subscription.category}</TableCell>
@@ -272,6 +356,123 @@ export function SubscriptionList() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Add Subscription Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Subscription</DialogTitle>
+            <DialogDescription>
+              Add a new subscription to track and get reminders.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddSubscription}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Subscription Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder="Netflix, Spotify, etc."
+                  required
+                  value={newSubscription.name}
+                  onChange={(e) => setNewSubscription({ ...newSubscription, name: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="9.99"
+                      className="pl-7"
+                      required
+                      value={newSubscription.price}
+                      onChange={(e) => setNewSubscription({ ...newSubscription, price: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select 
+                    value={newSubscription.category} 
+                    onValueChange={(value) => setNewSubscription({ ...newSubscription, category: value })}
+                  >
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="billingCycle">Billing Cycle</Label>
+                  <Select
+                    value={newSubscription.billingCycle}
+                    onValueChange={(value) => setNewSubscription({ ...newSubscription, billingCycle: value })}
+                  >
+                    <SelectTrigger id="billingCycle">
+                      <SelectValue placeholder="Select billing cycle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {billingCycles.map((cycle) => (
+                        <SelectItem key={cycle} value={cycle}>
+                          {cycle}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    required
+                    value={newSubscription.startDate}
+                    onChange={(e) => setNewSubscription({ ...newSubscription, startDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input
+                  id="description"
+                  name="description"
+                  placeholder="Add notes about this subscription"
+                  value={newSubscription.description}
+                  onChange={(e) => setNewSubscription({ ...newSubscription, description: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Add Subscription</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

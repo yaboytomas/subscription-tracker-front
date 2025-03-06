@@ -15,52 +15,31 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Here&apos;s what&apos;s happening with your subscriptions.</p>
         </div>
-        <Link href="/dashboard/subscriptions/new" legacyBehavior passHref>
-          <Button asChild className="gap-2">
-            <a>
-              <PlusCircle className="h-4 w-4" />
-              <span>Add Subscription</span>
-            </a>
-          </Button>
-        </Link>
       </div>
 
       <SubscriptionStats />
 
-      <Tabs defaultValue="reminders">
+      <Tabs defaultValue="reminders" className="w-full">
         <TabsList>
           <TabsTrigger value="reminders">Upcoming Reminders</TabsTrigger>
           <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
         </TabsList>
-        <TabsContent value="reminders" className="space-y-4">
+        <TabsContent value="reminders">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Upcoming Reminders</CardTitle>
-                <CardDescription>View your upcoming subscription payments.</CardDescription>
-              </div>
+            <CardHeader>
+              <CardTitle>Upcoming Reminders</CardTitle>
+              <CardDescription>View and manage your upcoming payment reminders.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Don&apos;t forget about these upcoming payments.</p>
               <UpcomingReminders />
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="subscriptions" className="space-y-4">
+        <TabsContent value="subscriptions">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Active Subscriptions</CardTitle>
-                <CardDescription>Manage your active subscriptions and their details.</CardDescription>
-              </div>
-              <Link href="/dashboard/subscriptions/new" legacyBehavior passHref>
-                <Button asChild size="sm" variant="outline" className="gap-1">
-                  <a>
-                    <PlusCircle className="h-3.5 w-3.5" />
-                    <span>Add</span>
-                  </a>
-                </Button>
-              </Link>
+            <CardHeader>
+              <CardTitle>All Subscriptions</CardTitle>
+              <CardDescription>View, edit, and manage your subscriptions.</CardDescription>
             </CardHeader>
             <CardContent>
               <SubscriptionList />
