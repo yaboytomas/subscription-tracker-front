@@ -4,8 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SubscriptionList } from "@/components/subscription-list"
 import { UpcomingReminders } from "@/components/upcoming-reminders"
 import { SubscriptionStats } from "@/components/subscription-stats"
-import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
+import { SubscriptionsSection } from "@/components/subscriptions-section"
 
 export default function DashboardPage() {
   return (
@@ -36,15 +35,7 @@ export default function DashboardPage() {
           </Card>
         </TabsContent>
         <TabsContent value="subscriptions">
-          <Card>
-            <CardHeader>
-              <CardTitle>All Subscriptions</CardTitle>
-              <CardDescription>View, edit, and manage your subscriptions.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SubscriptionList />
-            </CardContent>
-          </Card>
+          <SubscriptionsSection />
         </TabsContent>
       </Tabs>
     </div>
