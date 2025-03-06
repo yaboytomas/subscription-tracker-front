@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Edit, MoreHorizontal, Trash2 } from "lucide-react"
+import { Edit, MoreHorizontal, Trash2, ArrowUpDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -93,11 +93,44 @@ const subscriptions = [
   },
 ]
 
+type SortField = "name" | "price" | "billingCycle" | "nextPayment" | "category"
+type SortDirection = "asc" | "desc"
+
 export function SubscriptionList() {
   const { toast } = useToast()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [subscriptionList, setSubscriptionList] = useState(subscriptions)
+  const [sortField, setSortField] = useState<SortField>("name")
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  const sortedSubscriptions = [...subscriptionList].sort((a, b) => {
+    const aValue = a[sortField]
+    const bValue = b[sortField]
+
+    if (sortField === "price") {
+      return sortDirection === "asc" ? aValue - bValue : bValue - aValue
+    }
+
+    if (sortField === "nextPayment") {
+      return sortDirection === "asc"
+        ? new Date(aValue).getTime() - new Date(bValue).getTime()
+        : new Date(bValue).getTime() - new Date(aValue).getTime()
+    }
+
+    return sortDirection === "asc"
+      ? String(aValue).localeCompare(String(bValue))
+      : String(bValue).localeCompare(String(aValue))
+  })
 
   const handleDelete = () => {
     if (deleteId) {
@@ -125,23 +158,78 @@ export function SubscriptionList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Billing Cycle</TableHead>
-              <TableHead>Next Payment</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => handleSort("name")}
+              >
+                <div className="flex items-center gap-1">
+                  Name
+                  <ArrowUpDown className="h-4 w-4" />
+                  {sortField === "name" && (
+                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => handleSort("price")}
+              >
+                <div className="flex items-center gap-1">
+                  Price
+                  <ArrowUpDown className="h-4 w-4" />
+                  {sortField === "price" && (
+                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => handleSort("billingCycle")}
+              >
+                <div className="flex items-center gap-1">
+                  Billing Cycle
+                  <ArrowUpDown className="h-4 w-4" />
+                  {sortField === "billingCycle" && (
+                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => handleSort("nextPayment")}
+              >
+                <div className="flex items-center gap-1">
+                  Next Payment
+                  <ArrowUpDown className="h-4 w-4" />
+                  {sortField === "nextPayment" && (
+                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => handleSort("category")}
+              >
+                <div className="flex items-center gap-1">
+                  Category
+                  <ArrowUpDown className="h-4 w-4" />
+                  {sortField === "category" && (
+                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
+              </TableHead>
               <TableHead className="w-[80px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {subscriptionList.length === 0 ? (
+            {sortedSubscriptions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
                   No subscriptions found. Add your first subscription to get started.
                 </TableCell>
               </TableRow>
             ) : (
-              subscriptionList.map((subscription) => (
+              sortedSubscriptions.map((subscription) => (
                 <TableRow key={subscription.id}>
                   <TableCell className="font-medium">{subscription.name}</TableCell>
                   <TableCell>${subscription.price.toFixed(2)}</TableCell>

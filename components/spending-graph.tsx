@@ -79,6 +79,18 @@ const COLORS = {
   ]
 }
 
+// Add category color mapping
+const CATEGORY_COLORS = {
+  Entertainment: 0, // Blue
+  Music: 1, // Green
+  Software: 2, // Red
+  Shopping: 4, // Orange (changed to yellow)
+  Utilities: 3, // Purple
+  Gaming: 5, // Cyan
+  Fitness: 6, // Indigo
+  Other: 7, // Pink
+}
+
 // Generate monthly data showing spending history and projections
 const generateTimeData = (months: number) => {
   const data = []
@@ -200,12 +212,32 @@ export function SpendingGraph() {
                   {data.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={colors[index % colors.length]}
+                      fill={colors[CATEGORY_COLORS[entry.name as keyof typeof CATEGORY_COLORS] || index % colors.length]}
                       className="cursor-pointer hover:opacity-80"
                     />
                   ))}
                 </Pie>
-                <Tooltip 
+                <text
+                  x="50%"
+                  y="45%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="text-2xl font-bold"
+                  fill={isDark ? 'hsl(var(--card-foreground))' : '#000000'}
+                >
+                  ${totalSpending.toFixed(2)}
+                </text>
+                <text
+                  x="50%"
+                  y="55%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="text-sm text-muted-foreground"
+                  fill={isDark ? 'hsl(var(--card-foreground))' : '#000000'}
+                >
+                  Total Monthly
+                </text>
+                <Tooltip
                   formatter={(value: number, name: string) => [
                     `$${value.toFixed(2)}`,
                     name,
