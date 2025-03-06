@@ -145,22 +145,19 @@ interface SubscriptionListProps {
 }
 
 const rowVariants = {
-  hidden: { opacity: 0, x: -20 },
-  show: { 
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
     opacity: 1, 
-    x: 0,
+    y: 0,
     transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15
+      duration: 0.3,
+      ease: "easeOut"
     }
   },
   hover: {
-    scale: 1.01,
+    backgroundColor: "hsl(var(--accent))",
     transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 10
+      duration: 0.2
     }
   }
 }
@@ -337,9 +334,10 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: Subscr
                   key={subscription.id}
                   variants={rowVariants}
                   initial="hidden"
-                  animate="show"
+                  animate="visible"
                   whileHover="hover"
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="cursor-pointer"
                 >
                   <TableCell className="font-medium">{subscription.name}</TableCell>
                   <TableCell>${parseFloat(subscription.price).toFixed(2)}</TableCell>

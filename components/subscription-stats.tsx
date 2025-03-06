@@ -147,8 +147,8 @@ export function SubscriptionStats() {
         <SpendingGraph />
         <div className="grid gap-4 md:grid-cols-3 w-full">
           <motion.div
-            whileHover={{ backgroundColor: "hsl(var(--accent))" }}
-            transition={{ duration: 0.2 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300, damping: 10 }}
           >
             <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("subscriptions")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -163,8 +163,8 @@ export function SubscriptionStats() {
           </motion.div>
 
           <motion.div
-            whileHover={{ backgroundColor: "hsl(var(--accent))" }}
-            transition={{ duration: 0.2 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300, damping: 10 }}
           >
             <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("spending")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -179,8 +179,8 @@ export function SubscriptionStats() {
           </motion.div>
 
           <motion.div
-            whileHover={{ backgroundColor: "hsl(var(--accent))" }}
-            transition={{ duration: 0.2 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300, damping: 10 }}
           >
             <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("upcoming")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
