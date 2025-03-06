@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarClock, CreditCard, DollarSign } from "lucide-react"
+import { CalendarClock, CreditCard, DollarSign, ArrowLeft } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -99,9 +99,29 @@ const monthlySpending = subscriptions.reduce((total, sub) => {
   return total
 }, 0)
 
+const dialogItemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  show: { 
+    opacity: 1, 
+    x: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }
+  },
+  hover: {
+    backgroundColor: "hsl(var(--accent))",
+    transition: {
+      duration: 0.2
+    }
+  }
+}
+
 export function SubscriptionStats() {
   const router = useRouter()
   const [openDialog, setOpenDialog] = useState<string | null>(null)
+  const [selectedSubscription, setSelectedSubscription] = useState<any>(null)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -111,14 +131,24 @@ export function SubscriptionStats() {
     })
   }
 
+  const calculateAnnualCost = (subscription: any) => {
+    if (!subscription) return 0
+    if (subscription.billingCycle === "Yearly") {
+      return subscription.price
+    } else if (subscription.billingCycle === "Monthly") {
+      return subscription.price * 12
+    }
+    return subscription.price
+  }
+
   return (
     <>
       <div className="flex flex-col gap-4 w-full">
         <SpendingGraph />
         <div className="grid gap-4 md:grid-cols-3 w-full">
           <motion.div
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
+            whileHover={{ backgroundColor: "hsl(var(--accent))" }}
+            transition={{ duration: 0.2 }}
           >
             <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("subscriptions")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -133,8 +163,8 @@ export function SubscriptionStats() {
           </motion.div>
 
           <motion.div
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
+            whileHover={{ backgroundColor: "hsl(var(--accent))" }}
+            transition={{ duration: 0.2 }}
           >
             <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("spending")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -149,8 +179,8 @@ export function SubscriptionStats() {
           </motion.div>
 
           <motion.div
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
+            whileHover={{ backgroundColor: "hsl(var(--accent))" }}
+            transition={{ duration: 0.2 }}
           >
             <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("upcoming")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -178,8 +208,17 @@ export function SubscriptionStats() {
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             <div className="space-y-4 pr-4">
-              {subscriptions.map((sub) => (
-                <div key={sub.id} className="flex items-center justify-between rounded-lg border p-3">
+              {subscriptions.map((sub, index) => (
+                <motion.div
+                  key={sub.id}
+                  variants={dialogItemVariants}
+                  initial="hidden"
+                  animate="show"
+                  whileHover="hover"
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center justify-between rounded-lg border p-3 cursor-pointer"
+                  onClick={() => setSelectedSubscription(sub)}
+                >
                   <div>
                     <div className="font-medium">{sub.name}</div>
                     <div className="text-sm text-muted-foreground">{sub.category}</div>
@@ -188,7 +227,7 @@ export function SubscriptionStats() {
                     <div className="font-medium">${sub.price.toFixed(2)}</div>
                     <div className="text-xs text-muted-foreground">{sub.billingCycle}</div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </ScrollArea>
@@ -220,10 +259,19 @@ export function SubscriptionStats() {
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             <div className="space-y-4 pr-4">
-              {subscriptions.map((sub) => {
+              {subscriptions.map((sub, index) => {
                 const monthlyPrice = sub.billingCycle === "Yearly" ? sub.price / 12 : sub.price
                 return (
-                  <div key={sub.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <motion.div
+                    key={sub.id}
+                    variants={dialogItemVariants}
+                    initial="hidden"
+                    animate="show"
+                    whileHover="hover"
+                    transition={{ delay: index * 0.05 }}
+                    className="flex items-center justify-between rounded-lg border p-3 cursor-pointer"
+                    onClick={() => setSelectedSubscription(sub)}
+                  >
                     <div>
                       <div className="font-medium">{sub.name}</div>
                       <div className="text-sm text-muted-foreground">{sub.category}</div>
@@ -234,7 +282,7 @@ export function SubscriptionStats() {
                         {sub.billingCycle === "Yearly" ? `${sub.price.toFixed(2)}/year` : "Monthly"}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
             </div>
@@ -268,8 +316,17 @@ export function SubscriptionStats() {
           <ScrollArea className="max-h-[60vh]">
             <div className="space-y-4 pr-4">
               {upcomingPayments.length > 0 ? (
-                upcomingPayments.map((sub) => (
-                  <div key={sub.id} className="flex items-center justify-between rounded-lg border p-3">
+                upcomingPayments.map((sub, index) => (
+                  <motion.div
+                    key={sub.id}
+                    variants={dialogItemVariants}
+                    initial="hidden"
+                    animate="show"
+                    whileHover="hover"
+                    transition={{ delay: index * 0.05 }}
+                    className="flex items-center justify-between rounded-lg border p-3 cursor-pointer"
+                    onClick={() => setSelectedSubscription(sub)}
+                  >
                     <div>
                       <div className="font-medium">{sub.name}</div>
                       <div className="text-sm text-muted-foreground">{formatDate(sub.nextPayment)}</div>
@@ -278,7 +335,7 @@ export function SubscriptionStats() {
                       <div className="font-medium">${sub.price.toFixed(2)}</div>
                       <div className="text-xs text-muted-foreground">{sub.billingCycle}</div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))
               ) : (
                 <div className="flex h-20 items-center justify-center rounded-lg border border-dashed">
@@ -298,6 +355,72 @@ export function SubscriptionStats() {
               }}
             >
               View All Reminders
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Subscription Details Dialog */}
+      <Dialog open={!!selectedSubscription} onOpenChange={(open) => !open && setSelectedSubscription(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setSelectedSubscription(null)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedSubscription?.name || "Subscription Details"}
+              </DialogTitle>
+            </div>
+            <DialogDescription>
+              {selectedSubscription?.category || "Loading..."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-muted-foreground">Monthly Cost</div>
+                <div className="text-2xl font-bold">
+                  ${selectedSubscription?.billingCycle === "Yearly" 
+                    ? ((selectedSubscription?.price || 0) / 12).toFixed(2) 
+                    : (selectedSubscription?.price || 0).toFixed(2)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-muted-foreground">Annual Cost</div>
+                <div className="text-2xl font-bold">
+                  ${calculateAnnualCost(selectedSubscription).toFixed(2)}
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground">Billing Cycle</div>
+              <div className="text-lg">{selectedSubscription?.billingCycle || "N/A"}</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground">Next Payment</div>
+              <div className="text-lg">
+                {selectedSubscription?.nextPayment 
+                  ? formatDate(selectedSubscription.nextPayment)
+                  : "N/A"}
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => {
+                if (selectedSubscription?.id) {
+                  setSelectedSubscription(null)
+                  router.push(`/dashboard/subscriptions/${selectedSubscription.id}`)
+                }
+              }}
+            >
+              Edit Subscription
             </Button>
           </div>
         </DialogContent>
