@@ -17,6 +17,7 @@ const subscriptions = [
     name: "Netflix",
     price: 15.99,
     billingCycle: "Monthly",
+    nextPayment: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     category: "Entertainment",
   },
   {
@@ -24,6 +25,7 @@ const subscriptions = [
     name: "Spotify",
     price: 9.99,
     billingCycle: "Monthly",
+    nextPayment: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     category: "Music",
   },
   {
@@ -31,21 +33,54 @@ const subscriptions = [
     name: "Adobe Creative Cloud",
     price: 52.99,
     billingCycle: "Monthly",
+    nextPayment: "2025-04-22",
     category: "Software",
   },
   {
     id: "4",
     name: "Amazon Prime",
-    price: 139/12, // Converting yearly to monthly
+    price: 139,
     billingCycle: "Yearly",
+    nextPayment: "2025-11-15",
     category: "Shopping",
   },
-  // ... other subscriptions
+  {
+    id: "5",
+    name: "Disney+",
+    price: 7.99,
+    billingCycle: "Monthly",
+    nextPayment: "2025-04-18",
+    category: "Entertainment",
+  },
+  {
+    id: "6",
+    name: "Microsoft 365",
+    price: 99.99,
+    billingCycle: "Yearly",
+    nextPayment: "2025-08-05",
+    category: "Software",
+  },
+  {
+    id: "7",
+    name: "YouTube Premium",
+    price: 11.99,
+    billingCycle: "Monthly",
+    nextPayment: "2025-04-12",
+    category: "Entertainment",
+  },
+  {
+    id: "8",
+    name: "iCloud Storage",
+    price: 2.99,
+    billingCycle: "Monthly",
+    nextPayment: "2025-04-08",
+    category: "Cloud Storage",
+  },
 ]
 
 // Calculate spending by category
 const spendingByCategory = subscriptions.reduce((acc, sub) => {
-  const monthlyPrice = sub.billingCycle === "Yearly" ? sub.price / 12 : sub.price
+  const monthlyPrice = sub.billingCycle === "Yearly" ? Math.round((sub.price / 12) * 100) / 100 : sub.price
   acc[sub.category] = (acc[sub.category] || 0) + monthlyPrice
   return acc
 }, {} as Record<string, number>)
