@@ -1,14 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ReferenceLine } from "recharts"
 import { useTheme } from "next-themes"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { DollarSign } from "lucide-react"
+import { DollarSign, TrendingUp } from "lucide-react"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 // This would come from your data source
 const subscriptions = [
@@ -307,36 +308,33 @@ export function SpendingGraph() {
 
       <Card className="w-full">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium">Monthly Spending Timeline</CardTitle>
-            <ToggleGroup type="single" value={timeRange} onValueChange={(value) => value && setTimeRange(value)}>
-              <ToggleGroupItem value="3" aria-label="3 Months">
-                3M
-              </ToggleGroupItem>
-              <ToggleGroupItem value="6" aria-label="6 Months">
-                6M
-              </ToggleGroupItem>
-              <ToggleGroupItem value="9" aria-label="9 Months">
-                9M
-              </ToggleGroupItem>
-              <ToggleGroupItem value="12" aria-label="12 Months">
-                12M
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
+          <CardTitle className="text-sm font-medium">Monthly Spending Breakdown</CardTitle>
+          <CardDescription>Last 6 months of subscription spending</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={timeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <BarChart 
+                data={timeData.slice(-6)} 
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                onClick={(data) => {
+                  if (data && data.activePayload) {
+                    const entry = data.activePayload[0].payload
+                    setSelectedCategory(null)
+                    setOpenDialog(true)
+                  }
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'hsl(var(--border))' : '#e5e7eb'} />
                 <XAxis 
                   dataKey="month" 
                   stroke={isDark ? 'hsl(var(--card-foreground))' : '#000000'}
+                  tick={{ fill: isDark ? 'hsl(var(--card-foreground))' : '#000000' }}
                 />
                 <YAxis 
                   stroke={isDark ? 'hsl(var(--card-foreground))' : '#000000'}
                   tickFormatter={(value) => `$${value}`}
+                  tick={{ fill: isDark ? 'hsl(var(--card-foreground))' : '#000000' }}
                 />
                 <Tooltip
                   contentStyle={{ 
@@ -355,29 +353,16 @@ export function SpendingGraph() {
                     if (entry.isProjection) {
                       parts.push('(Projected)')
                     }
-                    return [parts.join('\n'), '']
+                    return [parts.join('\n'), 'Monthly Spending']
                   }}
                 />
-                {/* Current spending reference line */}
-                <ReferenceLine
-                  y={currentTotal}
-                  stroke={colors[1]}
-                  strokeDasharray="3 3"
-                  label={{
-                    value: 'Current',
-                    fill: isDark ? 'hsl(var(--card-foreground))' : '#000000',
-                    position: 'right'
-                  }}
-                />
-                {/* Past months */}
                 <Bar
                   dataKey="amount"
                   fill={colors[0]}
-                  opacity={(entry) => entry.isProjection ? 0.7 : 1}
-                  stroke={isDark ? 'hsl(var(--border))' : '#e5e7eb'}
-                  strokeWidth={1}
+                  radius={[4, 4, 0, 0]}
+                  cursor="pointer"
                 >
-                  {timeData.map((entry, index) => (
+                  {timeData.slice(-6).map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={entry.isProjection ? colors[1] : colors[0]}
@@ -388,17 +373,6 @@ export function SpendingGraph() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-4 space-y-1 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3" style={{ backgroundColor: colors[0] }}></span>
-              <span>Past Spending</span>
-              <span className="h-3 w-3 ml-4" style={{ backgroundColor: colors[1], opacity: 0.7 }}></span>
-              <span>Projected Spending</span>
-            </div>
-            <p className="text-xs">
-              Hover over bars to see details. Dashed line shows your current monthly spending level.
-            </p>
-          </div>
         </CardContent>
       </Card>
 
@@ -407,7 +381,7 @@ export function SpendingGraph() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
-              {selectedCategory ? `${selectedCategory} Subscriptions` : 'All Categories'}
+              {selectedCategory ? `${selectedCategory} Subscriptions` : 'Monthly Spending Details'}
             </DialogTitle>
             <DialogDescription>
               Total monthly spending: ${totalSpending.toFixed(2)}
@@ -415,22 +389,21 @@ export function SpendingGraph() {
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             <div className="space-y-4 pr-4">
-              {data.map((category) => (
-                <div
-                  key={category.name}
-                  className="flex items-center justify-between rounded-lg border p-3 cursor-pointer hover:bg-accent"
-                  onClick={() => setSelectedCategory(category.name)}
-                >
-                  <div className="font-medium">{category.name}</div>
-                  <div className="text-right">
-                    <div className="font-medium">${category.value.toFixed(2)}</div>
-                    <div className="text-xs text-muted-foreground">per month</div>
-                  </div>
-                </div>
-              ))}
-              {selectedCategory && (
-                <div className="mt-4 space-y-2">
-                  <h3 className="font-semibold">Subscriptions in {selectedCategory}</h3>
+              {selectedCategory ? (
+                <>
+                  {data.map((category) => (
+                    <div
+                      key={category.name}
+                      className="flex items-center justify-between rounded-lg border p-3 cursor-pointer hover:bg-accent"
+                      onClick={() => setSelectedCategory(category.name)}
+                    >
+                      <div className="font-medium">{category.name}</div>
+                      <div className="text-right">
+                        <div className="font-medium">${category.value.toFixed(2)}</div>
+                        <div className="text-xs text-muted-foreground">per month</div>
+                      </div>
+                    </div>
+                  ))}
                   {categorySubscriptions.map((sub) => (
                     <div key={sub.id} className="flex items-center justify-between rounded-lg border p-3">
                       <div className="font-medium">{sub.name}</div>
@@ -442,6 +415,43 @@ export function SpendingGraph() {
                       </div>
                     </div>
                   ))}
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="rounded-lg border p-4">
+                    <h3 className="font-semibold mb-2">Current Subscriptions</h3>
+                    <div className="space-y-2">
+                      {subscriptions.map((sub) => (
+                        <div key={sub.id} className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{sub.name}</div>
+                            <div className="text-xs text-muted-foreground">{sub.category}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium">
+                              ${(sub.billingCycle === "Yearly" ? sub.price / 12 : sub.price).toFixed(2)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {sub.billingCycle} • Next: {new Date(sub.nextPayment).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <h3 className="font-semibold mb-2">Recent Changes</h3>
+                    <div className="space-y-2">
+                      {timeData.slice(-6).map((entry, index) => (
+                        entry.changeText && (
+                          <div key={index} className="flex items-center justify-between">
+                            <div className="font-medium">{entry.month}</div>
+                            <div className="text-muted-foreground">{entry.changeText}</div>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
