@@ -166,72 +166,42 @@ const CATEGORY_COLORS = {
 const generateTimeData = (months: number) => {
   const data = []
   const today = new Date()
+  const currentYear = today.getFullYear()
   
   // Calculate current total monthly spending
   const currentMonthlyTotal = subscriptions.reduce((total, sub) => {
     return total + (sub.billingCycle === "Yearly" ? sub.price / 12 : sub.price)
   }, 0)
 
-  // For 6M, 9M, and 12M views, show Jan-Jun, Jan-Sep, or Jan-Dec of current year
-  if (months === 12 || months === 6 || months === 9) {
-    const currentYear = today.getFullYear()
+  // Always show Jan-Dec of current year
+  for (let month = 0; month < 12; month++) {
+    const date = new Date(currentYear, month, 1)
+    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+    const isPast = date <= today
+    const isProjection = !isPast
     
-    for (let month = 0; month < months; month++) {
-      const date = new Date(currentYear, month, 1)
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-      const isPast = date <= today
-      const isProjection = !isPast
-      
-      // For this example, let's show some subscription changes
-      let monthTotal = currentMonthlyTotal
-      let changeText = ''
-      
-      // Simulate some changes (you would replace this with real data)
-      if (monthKey === 'Feb 24') {
-        monthTotal -= 15.99 // Netflix wasn't subscribed yet
-        changeText = 'Before Netflix'
-      } else if (monthKey === 'Mar 24') {
-        monthTotal += 14.99 // Will add new gaming subscription
-        changeText = '+ Gaming Sub ($14.99)'
-      } else if (monthKey === 'May 24') {
-        monthTotal -= 52.99 // Planning to cancel Adobe
-        changeText = '- Adobe CC ($52.99)'
-      }
-      
-      data.push({
-        month: monthKey,
-        amount: parseFloat(monthTotal.toFixed(2)),
-        isProjection,
-        changeText
-      })
+    // For this example, let's show some subscription changes
+    let monthTotal = currentMonthlyTotal
+    let changeText = ''
+    
+    // Simulate some changes (you would replace this with real data)
+    if (monthKey === 'Feb 24') {
+      monthTotal -= 15.99 // Netflix wasn't subscribed yet
+      changeText = 'Before Netflix'
+    } else if (monthKey === 'Mar 24') {
+      monthTotal += 14.99 // Will add new gaming subscription
+      changeText = '+ Gaming Sub ($14.99)'
+    } else if (monthKey === 'May 24') {
+      monthTotal -= 52.99 // Planning to cancel Adobe
+      changeText = '- Adobe CC ($52.99)'
     }
-  } else {
-    // For 3M view, show rolling months including projections
-    for (let i = months - 1; i >= -3; i--) {
-      const date = new Date(today.getFullYear(), today.getMonth() - i, 1)
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-      
-      let monthTotal = currentMonthlyTotal
-      let changeText = ''
-      
-      if (monthKey === 'Feb 24') {
-        monthTotal -= 15.99
-        changeText = 'Before Netflix'
-      } else if (monthKey === 'Mar 24') {
-        monthTotal += 14.99
-        changeText = '+ Gaming Sub ($14.99)'
-      } else if (monthKey === 'May 24') {
-        monthTotal -= 52.99
-        changeText = '- Adobe CC ($52.99)'
-      }
-      
-      data.push({
-        month: monthKey,
-        amount: parseFloat(monthTotal.toFixed(2)),
-        isProjection: i < 0,
-        changeText
-      })
-    }
+    
+    data.push({
+      month: monthKey,
+      amount: parseFloat(monthTotal.toFixed(2)),
+      isProjection,
+      changeText
+    })
   }
   
   return data
@@ -345,14 +315,14 @@ export function SpendingGraph() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-sm font-medium">Monthly Spending Breakdown</CardTitle>
-          <CardDescription>Last 6 months of subscription spending</CardDescription>
+          <CardDescription>Full year subscription spending overview</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
-                data={timeData.slice(-6)} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                data={timeData} 
+                margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
                 onClick={(data) => {
                   if (data && data.activePayload) {
                     const entry = data.activePayload[0].payload
@@ -366,6 +336,10 @@ export function SpendingGraph() {
                   dataKey="month" 
                   stroke={isDark ? 'hsl(var(--card-foreground))' : '#000000'}
                   tick={{ fill: isDark ? 'hsl(var(--card-foreground))' : '#000000' }}
+                  interval={0}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
                 />
                 <YAxis 
                   stroke={isDark ? 'hsl(var(--card-foreground))' : '#000000'}
@@ -398,7 +372,7 @@ export function SpendingGraph() {
                   radius={[4, 4, 0, 0]}
                   cursor="pointer"
                 >
-                  {timeData.slice(-6).map((entry, index) => (
+                  {timeData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={entry.isProjection ? colors[1] : colors[0]}
