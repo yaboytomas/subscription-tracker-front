@@ -89,8 +89,8 @@ const generateTimeData = (months: number) => {
     return total + (sub.billingCycle === "Yearly" ? sub.price / 12 : sub.price)
   }, 0)
 
-  // For 6M and 1-year views, show Jan-Jun or Jan-Dec of current year
-  if (months === 12 || months === 6) {
+  // For 6M, 9M, and 12M views, show Jan-Jun, Jan-Sep, or Jan-Dec of current year
+  if (months === 12 || months === 6 || months === 9) {
     const currentYear = today.getFullYear()
     
     for (let month = 0; month < months; month++) {
@@ -249,8 +249,11 @@ export function SpendingGraph() {
               <ToggleGroupItem value="6" aria-label="6 Months">
                 6M
               </ToggleGroupItem>
-              <ToggleGroupItem value="12" aria-label="1 Year">
-                1Y
+              <ToggleGroupItem value="9" aria-label="9 Months">
+                9M
+              </ToggleGroupItem>
+              <ToggleGroupItem value="12" aria-label="12 Months">
+                12M
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
