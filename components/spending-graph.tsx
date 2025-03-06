@@ -89,11 +89,11 @@ const generateTimeData = (months: number) => {
     return total + (sub.billingCycle === "Yearly" ? sub.price / 12 : sub.price)
   }, 0)
 
-  // For 1-year view, show Jan-Dec of current year
-  if (months === 12) {
+  // For 6M and 1-year views, show Jan-Jun or Jan-Dec of current year
+  if (months === 12 || months === 6) {
     const currentYear = today.getFullYear()
     
-    for (let month = 0; month < 12; month++) {
+    for (let month = 0; month < months; month++) {
       const date = new Date(currentYear, month, 1)
       const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
       const isPast = date <= today
@@ -123,7 +123,7 @@ const generateTimeData = (months: number) => {
       })
     }
   } else {
-    // For 3M and 6M views, show rolling months including projections
+    // For 3M view, show rolling months including projections
     for (let i = months - 1; i >= -3; i--) {
       const date = new Date(today.getFullYear(), today.getMonth() - i, 1)
       const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
@@ -155,12 +155,13 @@ const generateTimeData = (months: number) => {
 }
 
 export function SpendingGraph() {
-  const { theme } = useTheme()
+  const { theme, systemTheme } = useTheme()
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState("3")
 
-  const colors = theme === 'dark' ? COLORS.dark : COLORS.light
+  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark')
+  const colors = isDark ? COLORS.dark : COLORS.light
 
   const handleClick = (category: string) => {
     setSelectedCategory(category)
@@ -210,23 +211,23 @@ export function SpendingGraph() {
                     name,
                   ]}
                   contentStyle={{ 
-                    backgroundColor: theme === 'dark' ? 'hsl(var(--card))' : '#ffffff',
-                    borderColor: theme === 'dark' ? 'hsl(var(--border))' : '#e5e7eb',
+                    backgroundColor: isDark ? 'hsl(var(--card))' : '#ffffff',
+                    borderColor: isDark ? 'hsl(var(--border))' : '#e5e7eb',
                     borderRadius: '0.5rem',
                     padding: '0.75rem',
-                    boxShadow: theme === 'dark' ? '0 0 0 1px hsl(var(--border))' : 'none',
-                    color: theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000',
+                    boxShadow: isDark ? '0 0 0 1px hsl(var(--border))' : 'none',
+                    color: isDark ? 'hsl(var(--card-foreground))' : '#000000',
                   }}
                   itemStyle={{
-                    color: theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000',
+                    color: isDark ? 'hsl(var(--card-foreground))' : '#000000',
                   }}
                   labelStyle={{
-                    color: theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000',
+                    color: isDark ? 'hsl(var(--card-foreground))' : '#000000',
                   }}
                 />
                 <Legend 
                   formatter={(value) => (
-                    <span style={{ color: theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000' }}>
+                    <span style={{ color: isDark ? 'hsl(var(--card-foreground))' : '#000000' }}>
                       {value}
                     </span>
                   )}
@@ -258,22 +259,22 @@ export function SpendingGraph() {
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={timeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'hsl(var(--border))' : '#e5e7eb'} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'hsl(var(--border))' : '#e5e7eb'} />
                 <XAxis 
                   dataKey="month" 
-                  stroke={theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000'}
+                  stroke={isDark ? 'hsl(var(--card-foreground))' : '#000000'}
                 />
                 <YAxis 
-                  stroke={theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000'}
+                  stroke={isDark ? 'hsl(var(--card-foreground))' : '#000000'}
                   tickFormatter={(value) => `$${value}`}
                 />
                 <Tooltip
                   contentStyle={{ 
-                    backgroundColor: theme === 'dark' ? 'hsl(var(--card))' : '#ffffff',
-                    borderColor: theme === 'dark' ? 'hsl(var(--border))' : '#e5e7eb',
+                    backgroundColor: isDark ? 'hsl(var(--card))' : '#ffffff',
+                    borderColor: isDark ? 'hsl(var(--border))' : '#e5e7eb',
                     borderRadius: '0.5rem',
                     padding: '0.75rem',
-                    color: theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000',
+                    color: isDark ? 'hsl(var(--card-foreground))' : '#000000',
                   }}
                   formatter={(value: number, name: string, props: any) => {
                     const entry = props.payload
@@ -294,7 +295,7 @@ export function SpendingGraph() {
                   strokeDasharray="3 3"
                   label={{
                     value: 'Current',
-                    fill: theme === 'dark' ? 'hsl(var(--card-foreground))' : '#000000',
+                    fill: isDark ? 'hsl(var(--card-foreground))' : '#000000',
                     position: 'right'
                   }}
                 />
@@ -303,7 +304,7 @@ export function SpendingGraph() {
                   dataKey="amount"
                   fill={colors[0]}
                   opacity={(entry) => entry.isProjection ? 0.7 : 1}
-                  stroke={theme === 'dark' ? 'hsl(var(--border))' : '#e5e7eb'}
+                  stroke={isDark ? 'hsl(var(--border))' : '#e5e7eb'}
                   strokeWidth={1}
                 >
                   {timeData.map((entry, index) => (
