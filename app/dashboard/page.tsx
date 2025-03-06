@@ -27,11 +27,25 @@ export default function DashboardPage() {
 
       <SubscriptionStats />
 
-      <Tabs defaultValue="subscriptions" className="space-y-4">
+      <Tabs defaultValue="reminders">
         <TabsList>
-          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
           <TabsTrigger value="reminders">Upcoming Reminders</TabsTrigger>
+          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
         </TabsList>
+        <TabsContent value="reminders" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Upcoming Reminders</CardTitle>
+                <CardDescription>View your upcoming subscription payments.</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Don&apos;t forget about these upcoming payments.</p>
+              <UpcomingReminders />
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="subscriptions" className="space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -50,20 +64,6 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <SubscriptionList />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="reminders" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Upcoming Reminders</CardTitle>
-                <CardDescription>View your upcoming subscription payments.</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Don&apos;t forget about these upcoming payments.</p>
-              <UpcomingReminders />
             </CardContent>
           </Card>
         </TabsContent>

@@ -41,7 +41,7 @@ const reminders = [
     date: "2025-04-18",
     daysLeft: 6,
   },
-]
+].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 export function UpcomingReminders() {
   const formatDate = (dateString: string) => {
