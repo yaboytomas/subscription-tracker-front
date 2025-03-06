@@ -1,10 +1,50 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function SettingsPage() {
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
+  const [formData, setFormData] = useState({
+    name: "John Doe",
+    email: "john@example.com",
+    bio: "Software engineer and subscription enthusiast.",
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsLoading(true)
+    try {
+      // Handle form submission
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      })
+    } catch {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
@@ -36,50 +76,50 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Subscription Preferences */}
+        {/* Personal Information */}
         <Card>
-          <CardHeader>
-            <CardTitle>Subscription Preferences</CardTitle>
-            <CardDescription>Customize how you view and manage subscriptions.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Preferred Billing Cycle Display</Label>
-              <Select defaultValue="monthly">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select billing cycle display" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
-                  <SelectItem value="both">Show Both</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Reminder Settings</Label>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="email-reminders" className="flex flex-col space-y-1">
-                    <span>Email Reminders</span>
-                  </Label>
-                  <Switch id="email-reminders" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
-                    <span>Push Notifications</span>
-                  </Label>
-                  <Switch id="push-notifications" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="in-app-alerts" className="flex flex-col space-y-1">
-                    <span>In-App Alerts</span>
-                  </Label>
-                  <Switch id="in-app-alerts" defaultChecked />
+          <form onSubmit={handleSubmit}>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+              <CardDescription>Update your personal details.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col items-center space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src="/placeholder.svg?height=96&width=96" alt="User" />
+                  <AvatarFallback className="text-2xl">JD</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col space-y-2">
+                  <Button type="button" variant="outline" size="sm">
+                    Change Avatar
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
+                    Remove
+                  </Button>
                 </div>
               </div>
-            </div>
-          </CardContent>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" value={formData.name} onChange={handleChange} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea id="bio" name="bio" rows={4} value={formData.bio} onChange={handleChange} />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Saving..." : "Save Changes"}
+              </Button>
+            </CardFooter>
+          </form>
         </Card>
 
         {/* Data & Privacy */}
