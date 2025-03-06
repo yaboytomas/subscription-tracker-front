@@ -16,7 +16,7 @@ const subscriptions = [
     name: "Netflix",
     price: 15.99,
     billingCycle: "Monthly",
-    nextPayment: "2025-04-15",
+    nextPayment: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     category: "Entertainment",
   },
   {
@@ -24,7 +24,7 @@ const subscriptions = [
     name: "Spotify",
     price: 9.99,
     billingCycle: "Monthly",
-    nextPayment: "2025-04-10",
+    nextPayment: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     category: "Music",
   },
   {

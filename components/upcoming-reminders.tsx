@@ -5,41 +5,55 @@ import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 // Sample data - would be fetched from API in a real app
+const calculateDaysLeft = (dateString: string) => {
+  const today = new Date()
+  const paymentDate = new Date(dateString)
+  const diffTime = paymentDate.getTime() - today.getTime()
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
+
 const reminders = [
   {
     id: "1",
     name: "Netflix",
     price: 15.99,
-    date: "2025-04-15",
-    daysLeft: 3,
+    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    daysLeft: 7,
   },
   {
     id: "2",
     name: "Spotify",
     price: 9.99,
-    date: "2025-04-10",
-    daysLeft: -2,
+    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    daysLeft: 7,
   },
   {
-    id: "7",
-    name: "YouTube Premium",
-    price: 11.99,
-    date: "2025-04-12",
-    daysLeft: 0,
-  },
-  {
-    id: "8",
-    name: "iCloud Storage",
-    price: 2.99,
-    date: "2025-04-08",
-    daysLeft: -4,
+    id: "3",
+    name: "Adobe Creative Cloud",
+    price: 52.99,
+    date: "2025-04-22",
+    daysLeft: calculateDaysLeft("2025-04-22"),
   },
   {
     id: "5",
     name: "Disney+",
     price: 7.99,
     date: "2025-04-18",
-    daysLeft: 6,
+    daysLeft: calculateDaysLeft("2025-04-18"),
+  },
+  {
+    id: "7",
+    name: "YouTube Premium",
+    price: 11.99,
+    date: "2025-04-12",
+    daysLeft: calculateDaysLeft("2025-04-12"),
+  },
+  {
+    id: "8",
+    name: "iCloud Storage",
+    price: 2.99,
+    date: "2025-04-08",
+    daysLeft: calculateDaysLeft("2025-04-08"),
   },
 ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
