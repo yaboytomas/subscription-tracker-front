@@ -362,7 +362,7 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen }: Subscr
                   initial="hidden"
                   animate="visible"
                   whileHover="hover"
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ duration: 0.3 }}
                   className="cursor-pointer"
                 >
                   <TableCell className="font-medium">{subscription.name}</TableCell>
