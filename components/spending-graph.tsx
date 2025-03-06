@@ -7,9 +7,44 @@ import { useTheme } from "next-themes"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { DollarSign, TrendingUp } from "lucide-react"
+import { DollarSign, TrendingUp, ArrowLeft } from "lucide-react"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { motion } from "framer-motion"
+
+interface Subscription {
+  id: string
+  name: string
+  price: number
+  billingCycle: string
+  nextPayment: string
+  category: string
+}
+
+interface CategoryDetails {
+  name: string
+  total: number
+  subscriptions: Subscription[]
+}
+
+const dialogItemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  show: { 
+    opacity: 1, 
+    x: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }
+  },
+  hover: {
+    backgroundColor: "hsl(var(--accent))",
+    transition: {
+      duration: 0.2
+    }
+  }
+}
 
 // This would come from your data source
 const subscriptions = [
@@ -205,20 +240,20 @@ const generateTimeData = (months: number) => {
 export function SpendingGraph() {
   const { theme, systemTheme } = useTheme()
   const [openDialog, setOpenDialog] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedSubscription, setSelectedSubscription] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<CategoryDetails | null>(null)
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
   const [timeRange, setTimeRange] = useState("3")
 
   const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark')
   const colors = isDark ? COLORS.dark : COLORS.light
 
   const handleClick = (category: string) => {
-    setSelectedCategory(category)
+    setSelectedCategory(null)
     setOpenDialog(true)
   }
 
   const categorySubscriptions = selectedCategory
-    ? subscriptions.filter(sub => sub.category === selectedCategory)
+    ? subscriptions.filter(sub => sub.category === selectedCategory.name)
     : []
 
   const totalSpending = data.reduce((sum, item) => sum + item.value, 0)
@@ -380,17 +415,26 @@ export function SpendingGraph() {
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              {selectedSubscription 
-                ? subscriptions.find(s => s.id === selectedSubscription)?.name
-                : selectedCategory 
-                  ? `${selectedCategory} Subscriptions` 
-                  : 'Monthly Spending Details'}
-            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setOpenDialog(false)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedSubscription 
+                  ? subscriptions.find(s => s.id === selectedSubscription.id)?.name
+                  : selectedCategory 
+                    ? `${selectedCategory.name} Subscriptions` 
+                    : 'Monthly Spending Details'}
+              </DialogTitle>
+            </div>
             <DialogDescription>
               {selectedSubscription 
-                ? `${subscriptions.find(s => s.id === selectedSubscription)?.category} Subscription`
+                ? `${subscriptions.find(s => s.id === selectedSubscription.id)?.category} Subscription`
                 : `Total monthly spending: $${totalSpending.toFixed(2)}`}
             </DialogDescription>
           </DialogHeader>
@@ -402,17 +446,17 @@ export function SpendingGraph() {
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className="font-semibold text-lg">
-                          {subscriptions.find(s => s.id === selectedSubscription)?.name}
+                          {subscriptions.find(s => s.id === selectedSubscription.id)?.name}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {subscriptions.find(s => s.id === selectedSubscription)?.category}
+                          {subscriptions.find(s => s.id === selectedSubscription.id)?.category}
                         </p>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">
-                          ${(subscriptions.find(s => s.id === selectedSubscription)?.billingCycle === "Yearly" 
-                            ? (subscriptions.find(s => s.id === selectedSubscription)?.price || 0) / 12 
-                            : subscriptions.find(s => s.id === selectedSubscription)?.price || 0).toFixed(2)}
+                          ${(subscriptions.find(s => s.id === selectedSubscription.id)?.billingCycle === "Yearly" 
+                            ? (subscriptions.find(s => s.id === selectedSubscription.id)?.price || 0) / 12 
+                            : subscriptions.find(s => s.id === selectedSubscription.id)?.price || 0).toFixed(2)}
                         </div>
                         <div className="text-sm text-muted-foreground">per month</div>
                       </div>
@@ -421,21 +465,21 @@ export function SpendingGraph() {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Billing Cycle</span>
                         <span className="font-medium">
-                          {subscriptions.find(s => s.id === selectedSubscription)?.billingCycle}
+                          {subscriptions.find(s => s.id === selectedSubscription.id)?.billingCycle}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Next Payment</span>
                         <span className="font-medium">
-                          {new Date(subscriptions.find(s => s.id === selectedSubscription)?.nextPayment || '').toLocaleDateString()}
+                          {new Date(subscriptions.find(s => s.id === selectedSubscription.id)?.nextPayment || '').toLocaleDateString()}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Annual Cost</span>
                         <span className="font-medium">
-                          ${(subscriptions.find(s => s.id === selectedSubscription)?.billingCycle === "Yearly"
-                            ? subscriptions.find(s => s.id === selectedSubscription)?.price
-                            : (subscriptions.find(s => s.id === selectedSubscription)?.price || 0) * 12).toFixed(2)}
+                          ${(subscriptions.find(s => s.id === selectedSubscription.id)?.billingCycle === "Yearly"
+                            ? subscriptions.find(s => s.id === selectedSubscription.id)?.price
+                            : (subscriptions.find(s => s.id === selectedSubscription.id)?.price || 0) * 12).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -454,7 +498,7 @@ export function SpendingGraph() {
                     <div
                       key={category.name}
                       className="flex items-center justify-between rounded-lg border p-3 cursor-pointer hover:bg-accent"
-                      onClick={() => setSelectedCategory(category.name)}
+                      onClick={() => setSelectedCategory({ name: category.name, total: category.value, subscriptions: [] })}
                     >
                       <div className="font-medium">{category.name}</div>
                       <div className="text-right">
@@ -467,7 +511,7 @@ export function SpendingGraph() {
                     <div 
                       key={sub.id} 
                       className="flex items-center justify-between rounded-lg border p-3 cursor-pointer hover:bg-accent"
-                      onClick={() => setSelectedSubscription(sub.id)}
+                      onClick={() => setSelectedSubscription(sub)}
                     >
                       <div className="font-medium">{sub.name}</div>
                       <div className="text-right">
@@ -488,7 +532,7 @@ export function SpendingGraph() {
                         <div 
                           key={sub.id} 
                           className="flex items-center justify-between rounded-lg border p-3 cursor-pointer hover:bg-accent"
-                          onClick={() => setSelectedSubscription(sub.id)}
+                          onClick={() => setSelectedSubscription(sub)}
                         >
                           <div>
                             <div className="font-medium">{sub.name}</div>
@@ -523,12 +567,76 @@ export function SpendingGraph() {
               )}
             </div>
           </ScrollArea>
-          <div className="flex justify-between">
+          <div className="flex justify-end">
             <Button variant="outline" onClick={() => {
               setSelectedCategory(null)
               setSelectedSubscription(null)
               setOpenDialog(false)
             }}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category Details Dialog */}
+      <Dialog open={!!selectedCategory} onOpenChange={(open) => !open && setSelectedCategory(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setSelectedCategory(null)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedCategory?.name} Subscriptions
+              </DialogTitle>
+            </div>
+            <DialogDescription>
+              Total monthly spending: ${selectedCategory?.total.toFixed(2)}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-6 pr-4">
+              {/* Category Summary */}
+              <div className="rounded-lg bg-accent/50 p-4">
+                <div className="text-lg font-semibold">{selectedCategory?.name}</div>
+                <div className="text-2xl font-bold">${selectedCategory?.total.toFixed(2)}</div>
+                <div className="text-sm text-muted-foreground">per month</div>
+              </div>
+
+              {/* Individual Subscriptions */}
+              <div className="space-y-4">
+                <div className="text-sm font-medium text-muted-foreground">Individual Subscriptions</div>
+                {selectedCategory?.subscriptions.map((sub: Subscription, index: number) => (
+                  <motion.div
+                    key={sub.id}
+                    variants={dialogItemVariants}
+                    initial="hidden"
+                    animate="show"
+                    whileHover="hover"
+                    transition={{ delay: index * 0.05 }}
+                    className="flex items-center justify-between rounded-lg border p-3 cursor-pointer"
+                    onClick={() => setSelectedSubscription(sub)}
+                  >
+                    <div>
+                      <div className="font-medium">{sub.name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">${sub.price.toFixed(2)}</div>
+                      <div className="text-xs text-muted-foreground">{sub.billingCycle}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </ScrollArea>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setSelectedCategory(null)}>
               Close
             </Button>
           </div>

@@ -3,6 +3,7 @@
 import { CalendarClock } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
 // Sample data - would be fetched from API in a real app
 const pastPayments = [
@@ -41,32 +42,49 @@ export function PastPayments() {
   return (
     <div className="space-y-4">
       {pastPayments.length === 0 ? (
-        <div className="flex h-[200px] flex-col items-center justify-center rounded-md border border-dashed p-8 text-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex h-[200px] flex-col items-center justify-center rounded-md border border-dashed p-8 text-center"
+        >
           <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
             <CalendarClock className="h-10 w-10 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">No past payments</h3>
             <p className="mt-2 text-sm text-muted-foreground">You don&apos;t have any past subscription payments.</p>
           </div>
-        </div>
+        </motion.div>
       ) : (
-        pastPayments.map((payment) => (
-          <Card key={payment.id} className="overflow-hidden">
-            <CardContent className="p-0">
-              <div className="flex items-center">
-                <div className="flex h-full w-2 flex-shrink-0 bg-green-500" />
-                <div className="flex flex-1 items-center justify-between p-4">
-                  <div className="grid gap-1">
-                    <div className="font-semibold">{payment.name}</div>
-                    <div className="text-sm text-muted-foreground">{formatDate(payment.date)}</div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="font-semibold">${payment.price.toFixed(2)}</div>
-                    <div className="text-xs text-green-500">{payment.status}</div>
+        pastPayments.map((payment, index) => (
+          <motion.div
+            key={payment.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ 
+              delay: index * 0.1,
+              type: "spring", 
+              stiffness: 300, 
+              damping: 10 
+            }}
+          >
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex items-center">
+                  <div className="flex h-full w-2 flex-shrink-0 bg-green-500" />
+                  <div className="flex flex-1 items-center justify-between p-4">
+                    <div className="grid gap-1">
+                      <div className="font-semibold">{payment.name}</div>
+                      <div className="text-sm text-muted-foreground">{formatDate(payment.date)}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="font-semibold">${payment.price.toFixed(2)}</div>
+                      <div className="text-xs text-green-500">{payment.status}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))
       )}
     </div>
