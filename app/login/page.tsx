@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
@@ -10,12 +10,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, CheckCircle, Loader2, LogIn } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { motion } from "framer-motion"
 
 const LoginPage = () => {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   const { toast } = useToast()
   const [formData, setFormData] = useState({
     email: "",
@@ -23,6 +25,20 @@ const LoginPage = () => {
   })
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
   const [serverError, setServerError] = useState("")
+  const [userName, setUserName] = useState("")
+
+  // Redirect after success animation completes
+  useEffect(() => {
+    let redirectTimer: NodeJS.Timeout;
+    if (isSuccess) {
+      redirectTimer = setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000); // Wait for animation to complete before redirecting
+    }
+    return () => {
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
+  }, [isSuccess, router]);
 
   const validateForm = (): boolean => {
     const errors: { [key: string]: string } = {}
@@ -84,8 +100,15 @@ const LoginPage = () => {
         description: "You've been logged in successfully.",
       })
       
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Get user name for the welcome message if available
+      if (data.user && data.user.name) {
+        setUserName(data.user.name);
+      }
+      
+      // Show success animation
+      setIsSuccess(true)
+      
+      // Redirect will happen through useEffect
     } catch (err) {
       console.error(err)
       // Set server error message
@@ -95,9 +118,55 @@ const LoginPage = () => {
         description: err instanceof Error ? err.message : "Invalid credentials. Please try again.",
         variant: "destructive",
       })
-    } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex justify-center mb-6"
+          >
+            <div className="rounded-full bg-primary/10 p-4">
+              <LogIn className="h-16 w-16 text-primary" />
+            </div>
+          </motion.div>
+          <motion.h2 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="text-3xl font-bold mb-2"
+          >
+            {userName ? `Welcome back, ${userName}!` : 'Welcome back!'}
+          </motion.h2>
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="text-muted-foreground mb-8"
+          >
+            Login successful. Taking you to your dashboard...
+          </motion.p>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+          >
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          </motion.div>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
@@ -151,7 +220,14 @@ const LoginPage = () => {
           </CardContent>
           <CardFooter className="flex flex-col gap-2">
             <Button className="w-full" type="submit" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? (
+                <span className="flex items-center">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </span>
+              ) : (
+                "Login"
+              )}
             </Button>
             <div className="text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}

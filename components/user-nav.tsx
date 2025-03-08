@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
+import { LogoutAnimation } from "@/components/logout-animation"
 
 // For profile refresh events
 const PROFILE_UPDATE_EVENT = "profile-updated"
@@ -50,6 +51,7 @@ export function UserNav() {
     bio: "",
   })
   const [profileUpdated, setProfileUpdated] = useState(0)
+  const [showLogoutAnimation, setShowLogoutAnimation] = useState(false)
 
   // Fetch user data when component mounts or after profile update
   useEffect(() => {
@@ -153,6 +155,8 @@ export function UserNav() {
 
   const handleLogout = async () => {
     try {
+      setShowLogoutAnimation(true)
+      
       // Call the logout API
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
@@ -169,9 +173,11 @@ export function UserNav() {
         title: "Logged out",
         description: "You have been logged out successfully.",
       })
-      router.push("/login")
+      
+      // Don't redirect immediately - the animation component will handle it
     } catch (error) {
       console.error('Logout error:', error);
+      setShowLogoutAnimation(false)
       toast({
         title: "Error",
         description: "Logout failed. Please try again.",
@@ -282,6 +288,9 @@ export function UserNav() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Logout Animation */}
+      {showLogoutAnimation && <LogoutAnimation />}
     </>
   )
 }
