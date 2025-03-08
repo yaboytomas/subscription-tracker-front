@@ -81,6 +81,11 @@ export async function sendPaymentReminderEmail(user: { email: string, name: stri
       day: 'numeric'
     });
     
+    // Get the days until payment message
+    const daysMessage = subscription.daysUntilPayment === 1 
+      ? 'tomorrow' 
+      : `in ${subscription.daysUntilPayment} days`;
+    
     const data = await resend.emails.send({
       from: 'Subscription Tracker <onboarding@resend.dev>', // Default sender that works without domain verification
       to: recipient,
@@ -93,7 +98,7 @@ export async function sendPaymentReminderEmail(user: { email: string, name: stri
         <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
           <p><strong>Subscription:</strong> ${subscription.name}</p>
           <p><strong>Amount:</strong> $${subscription.price}</p>
-          <p><strong>Due Date:</strong> ${dueDate} (in 3 days)</p>
+          <p><strong>Due Date:</strong> ${dueDate} (${daysMessage})</p>
           <p><strong>Billing Cycle:</strong> ${subscription.billingCycle}</p>
         </div>
         

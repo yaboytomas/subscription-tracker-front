@@ -96,6 +96,13 @@ export default function SettingsPage() {
   // Add a state for the delete account animation
   const [showDeleteAccountAnimation, setShowDeleteAccountAnimation] = useState(false)
 
+  // Add notification preferences state after other state declarations
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    paymentReminders: true,
+    reminderFrequency: '3days',
+  });
+  const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
+
   // Fetch user data when component mounts
   useEffect(() => {
     const fetchUserData = async () => {
@@ -115,6 +122,11 @@ export default function SettingsPage() {
             email: data.user.email,
             bio: data.user.bio || '',
           });
+          
+          // Set notification preferences if available
+          if (data.user.notificationPreferences) {
+            setNotificationPreferences(data.user.notificationPreferences);
+          }
         } else {
           throw new Error(data.message || 'Failed to fetch user data');
         }
@@ -759,6 +771,112 @@ export default function SettingsPage() {
     }
   };
 
+  // Add a function to handle notification preference changes
+  const handleNotificationChange = async (value: boolean) => {
+    try {
+      setIsUpdatingNotifications(true);
+      
+      // Update local state immediately for responsive UI
+      setNotificationPreferences(prev => ({
+        ...prev,
+        paymentReminders: value
+      }));
+      
+      // Call API to update preferences
+      const response = await fetch('/api/auth/notification-preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentReminders: value,
+          reminderFrequency: notificationPreferences.reminderFrequency
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update notification preferences');
+      }
+      
+      toast({
+        title: "Preferences updated",
+        description: "Your notification preferences have been updated.",
+      });
+      
+    } catch (err) {
+      console.error('Error updating notification preferences:', err);
+      
+      // Revert state on error
+      setNotificationPreferences(prev => ({
+        ...prev,
+        paymentReminders: !value
+      }));
+      
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to update preferences",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingNotifications(false);
+    }
+  };
+  
+  // Add a function to handle reminder frequency changes
+  const handleFrequencyChange = async (value: string) => {
+    try {
+      setIsUpdatingNotifications(true);
+      
+      // Update local state immediately for responsive UI
+      setNotificationPreferences(prev => ({
+        ...prev,
+        reminderFrequency: value
+      }));
+      
+      // Call API to update preferences
+      const response = await fetch('/api/auth/notification-preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentReminders: notificationPreferences.paymentReminders,
+          reminderFrequency: value
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update reminder frequency');
+      }
+      
+      toast({
+        title: "Frequency updated",
+        description: "Your reminder frequency has been updated.",
+      });
+      
+    } catch (err) {
+      console.error('Error updating reminder frequency:', err);
+      
+      // Revert state on error
+      setNotificationPreferences(prev => ({
+        ...prev,
+        reminderFrequency: prev.reminderFrequency // Revert to previous
+      }));
+      
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to update frequency",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingNotifications(false);
+    }
+  };
+
   return (
     <div className="container max-w-5xl py-6 space-y-8">
       <div className="space-y-2">
@@ -934,11 +1052,20 @@ export default function SettingsPage() {
                   Get notified before subscriptions renew
                 </p>
               </div>
-              <Switch id="renewal-reminders" defaultChecked />
+              <Switch 
+                id="renewal-reminders" 
+                checked={notificationPreferences.paymentReminders}
+                onCheckedChange={handleNotificationChange}
+                disabled={isUpdatingNotifications}
+              />
             </div>
             <div className="space-y-2">
               <Label>Reminder Frequency</Label>
-              <Select defaultValue="3days">
+              <Select 
+                value={notificationPreferences.reminderFrequency}
+                onValueChange={handleFrequencyChange}
+                disabled={!notificationPreferences.paymentReminders || isUpdatingNotifications}
+              >
                 <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder="Select reminder frequency" />
                 </SelectTrigger>
@@ -948,6 +1075,9 @@ export default function SettingsPage() {
                   <SelectItem value="3days">3 Days Before</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Choose when you'll receive payment reminders for your subscriptions
+              </p>
             </div>
           </CardContent>
         </Card>

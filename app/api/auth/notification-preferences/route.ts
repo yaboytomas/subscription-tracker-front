@@ -3,7 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { getCurrentUser } from '@/lib/auth';
 
-// GET the current user's profile
+// GET the current user's notification preferences
 export async function GET(req: NextRequest) {
   try {
     // Connect to database
@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    // Find user in database (to get latest data)
-    const user = await User.findById(currentUser.id).select('-password');
+    // Find user in database
+    const user = await User.findById(currentUser.id).select('notificationPreferences');
     
     if (!user) {
       return NextResponse.json(
@@ -29,21 +29,16 @@ export async function GET(req: NextRequest) {
       );
     }
     
+    // Return the notification preferences or default values
     return NextResponse.json({
       success: true,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        bio: user.bio || '',
-        notificationPreferences: user.notificationPreferences || {
-          paymentReminders: true,
-          reminderFrequency: '3days'
-        }
-      },
+      notificationPreferences: user.notificationPreferences || {
+        paymentReminders: true,
+        reminderFrequency: '3days'
+      }
     });
   } catch (error: any) {
-    console.error('Error fetching user profile:', error);
+    console.error('Error fetching notification preferences:', error);
     return NextResponse.json(
       { success: false, message: error.message || 'Internal server error' },
       { status: 500 }
@@ -51,7 +46,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// PUT to update the current user's profile
+// PUT to update notification preferences
 export async function PUT(req: NextRequest) {
   try {
     // Connect to database
@@ -68,42 +63,35 @@ export async function PUT(req: NextRequest) {
     }
     
     // Parse request body
-    const body = await req.json();
-    const { name, email, bio, notificationPreferences } = body;
+    const { paymentReminders, reminderFrequency } = await req.json();
     
     // Basic validation
-    if (!name || !email) {
+    if (paymentReminders === undefined || !reminderFrequency) {
       return NextResponse.json(
-        { success: false, message: 'Name and email are required' },
+        { success: false, message: 'Payment reminders setting and reminder frequency are required' },
         { status: 400 }
       );
     }
     
-    // Check if email is already in use by another user
-    if (email !== currentUser.email) {
-      const existingUser = await User.findOne({ email, _id: { $ne: currentUser.id } });
-      if (existingUser) {
-        return NextResponse.json(
-          { success: false, message: 'Email already in use' },
-          { status: 400 }
-        );
-      }
+    // Validate reminder frequency
+    if (!['daily', 'weekly', '3days'].includes(reminderFrequency)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid reminder frequency. Must be one of: daily, weekly, 3days' },
+        { status: 400 }
+      );
     }
     
-    // Prepare update object
-    const updateData: any = { name, email, bio };
-    
-    // Add notification preferences if provided
-    if (notificationPreferences) {
-      updateData.notificationPreferences = notificationPreferences;
-    }
-    
-    // Update user
+    // Update user notification preferences
     const updatedUser = await User.findByIdAndUpdate(
       currentUser.id,
-      updateData,
+      { 
+        notificationPreferences: {
+          paymentReminders,
+          reminderFrequency
+        }
+      },
       { new: true, runValidators: true }
-    ).select('-password');
+    ).select('notificationPreferences');
     
     if (!updatedUser) {
       return NextResponse.json(
@@ -114,19 +102,10 @@ export async function PUT(req: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      user: {
-        id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        bio: updatedUser.bio || '',
-        notificationPreferences: updatedUser.notificationPreferences || {
-          paymentReminders: true,
-          reminderFrequency: '3days'
-        }
-      },
+      notificationPreferences: updatedUser.notificationPreferences
     });
   } catch (error: any) {
-    console.error('Error updating user profile:', error);
+    console.error('Error updating notification preferences:', error);
     return NextResponse.json(
       { success: false, message: error.message || 'Internal server error' },
       { status: 500 }

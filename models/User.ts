@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+// Interface for notification preferences
+export interface INotificationPreferences {
+  paymentReminders: boolean; // Whether to send payment reminders
+  reminderFrequency: 'daily' | 'weekly' | '3days'; // When to send reminders
+}
+
 export interface IUser extends mongoose.Document {
   name: string;
   email: string;
@@ -8,6 +14,7 @@ export interface IUser extends mongoose.Document {
   bio?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  notificationPreferences?: INotificationPreferences;
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -44,6 +51,17 @@ const UserSchema = new mongoose.Schema<IUser>(
     resetPasswordExpires: {
       type: Date,
       select: false, // Don't return this field by default
+    },
+    notificationPreferences: {
+      paymentReminders: {
+        type: Boolean,
+        default: true,
+      },
+      reminderFrequency: {
+        type: String,
+        enum: ['daily', 'weekly', '3days'],
+        default: '3days',
+      },
     },
   },
   { timestamps: true }
