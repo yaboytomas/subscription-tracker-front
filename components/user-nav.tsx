@@ -27,6 +27,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 
+// For profile refresh events
+const PROFILE_UPDATE_EVENT = "profile-updated"
+
 // Interface for user data
 interface UserData {
   id: string;
@@ -85,6 +88,22 @@ export function UserNav() {
     fetchUserData();
   }, [toast, profileUpdated]);
 
+  // Listen for profile update events from other components
+  useEffect(() => {
+    // Handler for when profile is updated elsewhere
+    const handleProfileUpdate = () => {
+      setProfileUpdated(prev => prev + 1);
+    };
+
+    // Add event listener
+    window.addEventListener(PROFILE_UPDATE_EVENT, handleProfileUpdate);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(PROFILE_UPDATE_EVENT, handleProfileUpdate);
+    };
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -117,6 +136,9 @@ export function UserNav() {
       
       // Trigger a re-fetch of user data
       setProfileUpdated(prev => prev + 1)
+      
+      // Dispatch event to notify other components about the profile update
+      window.dispatchEvent(new Event(PROFILE_UPDATE_EVENT));
     } catch (err) {
       console.error('Error updating profile:', err);
       toast({

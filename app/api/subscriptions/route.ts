@@ -58,25 +58,58 @@ export async function POST(req: NextRequest) {
     const startDate = new Date(body.startDate);
     let nextPayment = new Date(startDate);
     
-    switch (body.billingCycle) {
-      case 'Weekly':
-        nextPayment.setDate(startDate.getDate() + 7);
-        break;
-      case 'Biweekly':
-        nextPayment.setDate(startDate.getDate() + 14);
-        break;
-      case 'Monthly':
-        nextPayment.setMonth(startDate.getMonth() + 1);
-        break;
-      case 'Quarterly':
-        nextPayment.setMonth(startDate.getMonth() + 3);
-        break;
-      case 'Yearly':
-        nextPayment.setFullYear(startDate.getFullYear() + 1);
-        break;
-      default:
-        // Default to monthly if unknown billing cycle
-        nextPayment.setMonth(startDate.getMonth() + 1);
+    // Check if start date is in the future
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of day
+    
+    // If start date is in the future, use it as the next payment date
+    if (startDate > today) {
+      nextPayment = startDate;
+    } else {
+      // If start date is today or in the past, calculate next payment based on billing cycle
+      switch (body.billingCycle) {
+        case 'Weekly':
+          nextPayment.setDate(startDate.getDate() + 7);
+          break;
+        case 'Biweekly':
+          nextPayment.setDate(startDate.getDate() + 14);
+          break;
+        case 'Monthly':
+          nextPayment.setMonth(startDate.getMonth() + 1);
+          break;
+        case 'Quarterly':
+          nextPayment.setMonth(startDate.getMonth() + 3);
+          break;
+        case 'Yearly':
+          nextPayment.setFullYear(startDate.getFullYear() + 1);
+          break;
+        default:
+          // Default to monthly if unknown billing cycle
+          nextPayment.setMonth(startDate.getMonth() + 1);
+      }
+      
+      // If calculated next payment is still in the past, keep advancing until it's in the future
+      while (nextPayment <= today) {
+        switch (body.billingCycle) {
+          case 'Weekly':
+            nextPayment.setDate(nextPayment.getDate() + 7);
+            break;
+          case 'Biweekly':
+            nextPayment.setDate(nextPayment.getDate() + 14);
+            break;
+          case 'Monthly':
+            nextPayment.setMonth(nextPayment.getMonth() + 1);
+            break;
+          case 'Quarterly':
+            nextPayment.setMonth(nextPayment.getMonth() + 3);
+            break;
+          case 'Yearly':
+            nextPayment.setFullYear(nextPayment.getFullYear() + 1);
+            break;
+          default:
+            nextPayment.setMonth(nextPayment.getMonth() + 1);
+        }
+      }
     }
     
     // Create subscription with user ID

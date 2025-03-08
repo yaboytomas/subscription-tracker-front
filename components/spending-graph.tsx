@@ -160,7 +160,7 @@ const generateTimeData = (subscriptions: Subscription[], months: number) => {
   return data
 }
 
-export function SpendingGraph() {
+export function SpendingGraph({ refreshTrigger = 0 }) {
   const { theme, systemTheme } = useTheme()
   const { toast } = useToast()
   const [openDialog, setOpenDialog] = useState(false)
@@ -215,7 +215,7 @@ export function SpendingGraph() {
     };
     
     fetchSubscriptions();
-  }, [toast]);
+  }, [toast, refreshTrigger]);
 
   const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark')
   const colors = isDark ? COLORS.dark : COLORS.light
@@ -324,6 +324,9 @@ export function SpendingGraph() {
                     borderRadius: '0.5rem',
                     color: 'hsl(var(--foreground))'
                   }}
+                  labelStyle={{ 
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))' 
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -378,7 +381,9 @@ export function SpendingGraph() {
                     borderRadius: '0.5rem',
                     color: 'hsl(var(--foreground))'
                   }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  labelStyle={{ 
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
+                  }}
                 />
                 <ReferenceLine 
                   x={timeData.findIndex(d => !d.isProjection) < 0 ? null : timeData[timeData.findIndex(d => !d.isProjection)].month} 
@@ -392,6 +397,11 @@ export function SpendingGraph() {
                   opacity={0.7}
                   barSize={30}
                   radius={[4, 4, 0, 0]}
+                  activeBar={{ 
+                    fill: isDark ? 'hsl(var(--accent))' : 'hsl(var(--muted))',
+                    stroke: isDark ? 'hsl(var(--accent-foreground))' : 'hsl(var(--accent))',
+                    strokeWidth: 1
+                  }}
                 >
                   {timeData.map((entry, index) => (
                     <Cell 

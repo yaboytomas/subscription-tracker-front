@@ -11,6 +11,65 @@ import { SpendingGraph } from "@/components/spending-graph"
 import { motion } from "framer-motion"
 import { useToast } from "@/components/ui/use-toast"
 
+// Calculate days left until a payment date
+const calculateDaysLeft = (dateString: string) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0) // Set to beginning of day
+  const paymentDate = new Date(dateString)
+  paymentDate.setHours(0, 0, 0, 0) // Set to beginning of day
+  const diffTime = paymentDate.getTime() - today.getTime()
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
+
+// Calculate next payment date based on billing cycle
+const calculateNextPaymentDate = (subscription: Subscription) => {
+  const { startDate, billingCycle, nextPayment } = subscription;
+  
+  // Parse dates
+  const start = new Date(startDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Check if start date is in the future (for new subscriptions)
+  if (start > today) {
+    return startDate; // Return the future start date as the next payment
+  }
+  
+  // If nextPayment is already in the future, return it
+  const nextPaymentDate = new Date(nextPayment);
+  if (nextPaymentDate > today) {
+    return nextPayment;
+  }
+  
+  // Calculate new next payment date based on billing cycle
+  let newNextPayment = new Date(nextPaymentDate);
+  
+  while (newNextPayment <= today) {
+    switch (billingCycle) {
+      case 'Monthly':
+        newNextPayment.setMonth(newNextPayment.getMonth() + 1);
+        break;
+      case 'Yearly':
+        newNextPayment.setFullYear(newNextPayment.getFullYear() + 1);
+        break;
+      case 'Weekly':
+        newNextPayment.setDate(newNextPayment.getDate() + 7);
+        break;
+      case 'Biweekly':
+        newNextPayment.setDate(newNextPayment.getDate() + 14);
+        break;
+      case 'Quarterly':
+        newNextPayment.setMonth(newNextPayment.getMonth() + 3);
+        break;
+      default:
+        newNextPayment.setMonth(newNextPayment.getMonth() + 1);
+        break;
+    }
+  }
+  
+  return newNextPayment.toISOString().split('T')[0];
+};
+
 // Define subscription type
 interface Subscription {
   _id: string;
@@ -43,7 +102,7 @@ const dialogItemVariants = {
   }
 }
 
-export function SubscriptionStats() {
+export function SubscriptionStats({ refreshTrigger = 0 }) {
   const router = useRouter()
   const { toast } = useToast()
   const [openDialog, setOpenDialog] = useState<string | null>(null)
@@ -86,18 +145,25 @@ export function SubscriptionStats() {
     };
     
     fetchSubscriptions();
-  }, [toast]);
+  }, [toast, refreshTrigger]);
 
   // Get upcoming payments (next 7 days)
   const upcomingPayments = subscriptions
-    .filter((sub) => {
-      const paymentDate = new Date(sub.nextPayment)
-      const today = new Date()
-      const sevenDaysLater = new Date()
-      sevenDaysLater.setDate(today.getDate() + 7)
-      return paymentDate >= today && paymentDate <= sevenDaysLater
+    .map(sub => {
+      // Calculate accurate next payment date
+      const accurateNextPayment = calculateNextPaymentDate(sub);
+      const daysLeft = calculateDaysLeft(accurateNextPayment);
+      
+      return {
+        ...sub,
+        accurateNextPayment,
+        daysLeft
+      };
     })
-    .sort((a, b) => new Date(a.nextPayment).getTime() - new Date(b.nextPayment).getTime())
+    // Only include payments in the next 7 days
+    .filter(sub => sub.daysLeft >= 0 && sub.daysLeft <= 7)
+    // Sort by days left (soonest first)
+    .sort((a, b) => a.daysLeft - b.daysLeft);
 
   // Calculate monthly spending
   const monthlySpending = subscriptions.reduce((total, sub) => {
@@ -164,7 +230,7 @@ export function SubscriptionStats() {
   return (
     <>
       <div className="flex flex-col gap-4 w-full">
-        <SpendingGraph />
+        <SpendingGraph refreshTrigger={refreshTrigger} />
         <div className="grid gap-4 md:grid-cols-3 w-full">
           <motion.div
             whileHover={{ scale: 1.02 }}
@@ -389,7 +455,10 @@ export function SubscriptionStats() {
                   >
                     <div>
                       <div className="font-medium">{sub.name}</div>
-                      <div className="text-sm text-muted-foreground">{formatDate(sub.nextPayment)}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatDate(sub.accurateNextPayment)} 
+                        {sub.daysLeft === 0 ? " (Today)" : sub.daysLeft === 1 ? " (Tomorrow)" : ` (${sub.daysLeft} days)`}
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="font-medium">${parseFloat(sub.price).toFixed(2)}</div>
@@ -397,14 +466,12 @@ export function SubscriptionStats() {
                     </div>
                   </motion.div>
                 ))}
-                {upcomingPayments.length > 0 && (
-                  <div className="mt-4 flex justify-between border-t pt-4">
-                    <div className="font-semibold">Total Upcoming</div>
-                    <div className="font-semibold">
-                      ${upcomingPayments.reduce((total, sub) => total + parseFloat(sub.price), 0).toFixed(2)}
-                    </div>
+                <div className="mt-4 flex justify-between border-t pt-4">
+                  <div className="font-semibold">Total Upcoming</div>
+                  <div className="font-semibold">
+                    ${upcomingPayments.reduce((total, sub) => total + parseFloat(sub.price), 0).toFixed(2)}
                   </div>
-                )}
+                </div>
               </div>
             )}
           </ScrollArea>

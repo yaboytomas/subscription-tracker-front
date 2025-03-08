@@ -45,6 +45,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<{ id: string; name: string; email: string } | null>(null)
   const [greeting, setGreeting] = useState("Hello")
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  
+  const refreshData = () => {
+    setRefreshTrigger(prev => prev + 1)
+  }
   
   useEffect(() => {
     // Check if user is authenticated
@@ -107,7 +112,7 @@ export default function DashboardPage() {
       </motion.div>
 
       <motion.div variants={item}>
-        <SubscriptionStats />
+        <SubscriptionStats refreshTrigger={refreshTrigger} />
       </motion.div>
 
       <motion.div variants={item}>
@@ -123,12 +128,12 @@ export default function DashboardPage() {
                 <CardDescription>View and manage your upcoming payment reminders.</CardDescription>
               </CardHeader>
               <CardContent>
-                <UpcomingReminders />
+                <UpcomingReminders refreshTrigger={refreshTrigger} />
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="subscriptions">
-            <SubscriptionsSection />
+            <SubscriptionsSection refreshData={refreshData} />
           </TabsContent>
         </Tabs>
       </motion.div>

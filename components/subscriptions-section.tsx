@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
 import { SubscriptionList } from "@/components/subscription-list"
 
-export function SubscriptionsSection() {
+interface SubscriptionsSectionProps {
+  refreshData?: () => void;
+}
+
+export function SubscriptionsSection({ refreshData }: SubscriptionsSectionProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   return (
@@ -28,7 +32,11 @@ export function SubscriptionsSection() {
         </div>
       </CardHeader>
       <CardContent>
-        <SubscriptionList isAddDialogOpen={isAddDialogOpen} setIsAddDialogOpen={setIsAddDialogOpen} />
+        <SubscriptionList 
+          isAddDialogOpen={isAddDialogOpen} 
+          setIsAddDialogOpen={setIsAddDialogOpen} 
+          refreshData={refreshData}
+        />
       </CardContent>
     </Card>
   )

@@ -21,6 +21,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 
+// For profile refresh events
+const PROFILE_UPDATE_EVENT = "profile-updated"
+
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
@@ -30,6 +33,9 @@ export default function SettingsPage() {
     email: "",
     bio: "",
   })
+  
+  // Use this to force refreshes when user data is updated elsewhere
+  const [profileRefreshTrigger, setProfileRefreshTrigger] = useState(0)
   
   // Email change state
   const [showEmailDialog, setShowEmailDialog] = useState(false)
@@ -83,7 +89,23 @@ export default function SettingsPage() {
     };
     
     fetchUserData();
-  }, [toast]);
+  }, [toast, profileRefreshTrigger]);
+
+  // Listen for profile update events from other components
+  useEffect(() => {
+    // Handler for when profile is updated elsewhere
+    const handleProfileUpdate = () => {
+      setProfileRefreshTrigger(prev => prev + 1);
+    };
+
+    // Add event listener
+    window.addEventListener(PROFILE_UPDATE_EVENT, handleProfileUpdate);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(PROFILE_UPDATE_EVENT, handleProfileUpdate);
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -104,13 +126,20 @@ export default function SettingsPage() {
     event.preventDefault()
     setIsLoading(true)
     try {
+      // Create a copy of formData without modifying email
+      const submitData = {
+        name: formData.name,
+        bio: formData.bio,
+        email: formData.email // Keep email even though it's not in the form anymore
+      };
+      
       // Call the API to update user profile
       const response = await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
       
       const data = await response.json();
@@ -124,8 +153,8 @@ export default function SettingsPage() {
         description: "Your profile has been updated successfully.",
       })
       
-      // Force a reload to update all components with the new user data
-      window.location.reload();
+      // Dispatch event to notify other components about the profile update
+      window.dispatchEvent(new Event(PROFILE_UPDATE_EVENT));
     } catch (err) {
       console.error('Error updating profile:', err);
       toast({
@@ -286,14 +315,10 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="flex-1 space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
                         <Input id="name" name="name" value={formData.name} onChange={handleChange} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -329,7 +354,9 @@ export default function SettingsPage() {
               >
                 <div className="flex flex-col items-start gap-1">
                   <span className="font-medium">Change Email</span>
-                  <span className="text-sm text-muted-foreground">Update your email address</span>
+                  <span className="text-sm text-muted-foreground">
+                    Current: {formData.email ? formData.email : "Loading..."}
+                  </span>
                 </div>
               </Button>
               <Button 

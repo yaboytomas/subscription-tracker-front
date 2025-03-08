@@ -41,6 +41,11 @@ const calculateNextPaymentDate = (subscription: Subscription) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
+  // Check if start date is in the future (for new subscriptions)
+  if (start > today) {
+    return startDate; // Return the future start date as the next payment
+  }
+  
   // If nextPayment is already in the future, return it
   const nextPaymentDate = new Date(nextPayment);
   if (nextPaymentDate > today) {
@@ -76,7 +81,7 @@ const calculateNextPaymentDate = (subscription: Subscription) => {
   return newNextPayment.toISOString().split('T')[0];
 };
 
-export function UpcomingReminders() {
+export function UpcomingReminders({ refreshTrigger = 0 }) {
   const { toast } = useToast()
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -116,7 +121,7 @@ export function UpcomingReminders() {
     };
     
     fetchSubscriptions();
-  }, [toast]);
+  }, [toast, refreshTrigger]);
 
   // Process subscriptions to create reminders sorted by next payment date
   const reminders = subscriptions
