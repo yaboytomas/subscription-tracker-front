@@ -9,13 +9,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, CheckCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
 
 const ForgotPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const [email, setEmail] = useState("")
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [result, setResult] = useState<{
+    success: boolean;
+    notFound?: boolean;
+    accountDeleted?: boolean;
+    emailFailed?: boolean;
+    message: string;
+  } | null>(null)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -30,6 +37,7 @@ const ForgotPasswordPage = () => {
     }
 
     setIsLoading(true)
+    setResult(null)
 
     try {
       // Make API call to forgot-password endpoint
@@ -47,14 +55,39 @@ const ForgotPasswordPage = () => {
         throw new Error(data.error || "Failed to send reset link")
       }
 
-      // Show success message regardless of whether the email exists
-      // This prevents email enumeration attacks
-      setIsSubmitted(true)
-
-      toast({
-        title: "Check your email",
-        description: "We've sent you a password reset link if the email exists in our system.",
-      })
+      // Store the result
+      setResult(data)
+      
+      // If successful, show success UI
+      if (data.success) {
+        setIsSubmitted(true)
+        
+        toast({
+          title: "Email sent",
+          description: "A password reset link has been sent to your email address.",
+        })
+      } else if (data.notFound) {
+        // User not found
+        toast({
+          title: "Account not found",
+          description: data.message,
+          variant: "destructive",
+        })
+      } else if (data.accountDeleted) {
+        // Account was deleted
+        toast({
+          title: "Account deleted",
+          description: data.message,
+          variant: "destructive",
+        })
+      } else if (data.emailFailed) {
+        // Email failed to send
+        toast({
+          title: "Email failed",
+          description: data.message,
+          variant: "destructive",
+        })
+      }
     } catch (err) {
       console.error("Error requesting password reset:", err)
       toast({
@@ -97,6 +130,36 @@ const ForgotPasswordPage = () => {
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
+                
+                {/* Error Messages */}
+                {result && !result.success && (
+                  <div className={`p-3 rounded-md ${
+                    result.accountDeleted ? "bg-amber-50 text-amber-800" :
+                    result.notFound ? "bg-blue-50 text-blue-800" :
+                    "bg-red-50 text-red-800"
+                  } text-sm flex gap-2 items-start`}>
+                    {result.accountDeleted ? (
+                      <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                    ) : result.notFound ? (
+                      <XCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <p className="font-medium">
+                        {result.accountDeleted ? "Account Deleted" : 
+                         result.notFound ? "Account Not Found" : 
+                         "Error"}
+                      </p>
+                      <p>{result.message}</p>
+                      {result.notFound && (
+                        <Link href="/signup" className="text-primary hover:underline mt-1 block">
+                          Create a new account
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={isLoading}>
@@ -118,8 +181,8 @@ const ForgotPasswordPage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                If you don&apos;t see the email in your inbox, please check your spam folder. The link will expire in 24
-                hours.
+                If you don&apos;t see the email in your inbox, please check your spam folder. The link will expire in 1
+                hour.
               </p>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">

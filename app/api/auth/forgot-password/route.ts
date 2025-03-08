@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import DeletedUser from '@/models/DeletedUser';
 import { sendPasswordResetEmail } from '@/lib/email-service';
 
 // Generates a random token
@@ -27,12 +28,26 @@ export async function POST(req: NextRequest) {
     // Find user by email
     const user = await User.findOne({ email });
 
-    // If no user found, still return success to prevent email enumeration attacks
+    // Check if email belongs to a deleted account
+    const deletedUser = await DeletedUser.findOne({ email });
+    
+    // If the email belongs to a deleted account, inform the user but maintain security
+    if (deletedUser && !user) {
+      console.log(`Password reset requested for deleted account: ${email}`);
+      return NextResponse.json({
+        success: false,
+        accountDeleted: true,
+        message: 'This account has been deleted. If you wish to use this email again, please sign up for a new account.'
+      });
+    }
+
+    // If no user found (and not deleted), return an appropriate message
     if (!user) {
       console.log(`Password reset requested for non-existent email: ${email}`);
       return NextResponse.json({ 
-        success: true, 
-        message: 'If a user with that email exists, we have sent them a password reset link'
+        success: false,
+        notFound: true,
+        message: 'No account found with this email address. Please check your email or create a new account.'
       });
     }
 
@@ -53,12 +68,17 @@ export async function POST(req: NextRequest) {
 
     if (!emailResult.success) {
       console.error('Failed to send password reset email:', emailResult.error);
+      return NextResponse.json({ 
+        success: false, 
+        emailFailed: true,
+        message: 'Failed to send the password reset email. Please try again later.'
+      });
     }
 
-    // Return success even if email fails to avoid revealing too much information
+    // Return success
     return NextResponse.json({ 
       success: true, 
-      message: 'If a user with that email exists, we have sent them a password reset link'
+      message: 'A password reset link has been sent to your email address.'
     });
   } catch (error) {
     console.error('Error in password reset request:', error);
