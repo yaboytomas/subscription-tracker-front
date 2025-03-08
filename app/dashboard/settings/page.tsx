@@ -181,13 +181,28 @@ export default function SettingsPage() {
         throw new Error('Please enter your password to confirm');
       }
       
-      // Here you would make an API call to update the email
-      // This would be a new endpoint that verifies the password and updates the email
+      // Call the API to update the email
+      const response = await fetch('/api/auth/change-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailChangeData),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update email');
+      }
       
       toast({
-        title: "Email update requested",
-        description: "A verification link has been sent to your new email address. Please check your inbox to complete the change.",
+        title: "Email updated",
+        description: "Your email has been updated successfully.",
       })
+      
+      // Trigger a refresh of user data
+      window.dispatchEvent(new Event(PROFILE_UPDATE_EVENT));
       
       // Close the dialog
       setShowEmailDialog(false)
@@ -230,31 +245,54 @@ export default function SettingsPage() {
         throw new Error('New passwords do not match');
       }
       
-      // Here you would make an API call to update the password
-      // This would be a new endpoint that verifies the current password and updates to the new one
+      console.log('Submitting password change...');
       
+      // Call the API to update the password
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: passwordChangeData.currentPassword,
+          newPassword: passwordChangeData.newPassword,
+          confirmPassword: passwordChangeData.confirmPassword,
+        }),
+      });
+      
+      const data = await response.json();
+      console.log('Password change response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update password');
+      }
+      
+      // Show a more prominent success message
       toast({
-        title: "Password updated",
-        description: "Your password has been updated successfully.",
-      })
+        title: "Success!",
+        description: "Your password has been updated successfully. Please use your new password next time you log in.",
+        variant: "default",
+        duration: 5000, // Show for a longer time
+      });
       
       // Close the dialog
-      setShowPasswordDialog(false)
+      setShowPasswordDialog(false);
       
       // Reset form
       setPasswordChangeData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
-      })
+      });
     } catch (err) {
+      console.error('Password change error:', err);
       toast({
         title: "Error",
         description: err instanceof Error ? err.message : "Something went wrong. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsChangingPassword(false)
+      setIsChangingPassword(false);
     }
   }
 

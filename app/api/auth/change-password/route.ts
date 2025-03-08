@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Get user with password
-    const user = await User.findById(currentUser.id);
+    // Get user with password (explicitly include the password field)
+    const user = await User.findById(currentUser.id).select('+password');
     
     if (!user) {
       return NextResponse.json(
@@ -60,6 +60,9 @@ export async function POST(req: NextRequest) {
     // Update password
     user.password = newPassword;
     await user.save();
+    
+    // Add console logs for debugging
+    console.log('Password updated successfully for user:', user.email);
     
     // Send password changed email notification (don't await to avoid delaying response)
     sendPasswordChangedEmail({

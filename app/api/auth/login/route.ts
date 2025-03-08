@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
     
     // Check if user exists
     if (!user) {
+      console.log(`Login attempt failed: No user found with email ${email}`);
       return NextResponse.json(
         { success: false, message: 'Invalid credentials' },
         { status: 401 }
@@ -32,7 +33,10 @@ export async function POST(req: NextRequest) {
     }
     
     // Verify password
+    console.log(`Attempting to verify password for user: ${email}`);
     const isPasswordValid = await user.comparePassword(password);
+    console.log(`Password verification result: ${isPasswordValid ? 'Success' : 'Failed'}`);
+    
     if (!isPasswordValid) {
       return NextResponse.json(
         { success: false, message: 'Invalid credentials' },
