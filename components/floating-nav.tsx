@@ -22,7 +22,13 @@ export function FloatingNav() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        const response = await fetch('/api/auth/me', {
+          // Add cache: 'no-store' to prevent caching issues
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
         setIsLoggedIn(response.ok);
       } catch (error) {
         setIsLoggedIn(false);
@@ -71,12 +77,20 @@ export function FloatingNav() {
               </motion.div>
               <div className="flex items-center gap-4">
                 <ModeToggle />
-                <Link href="/login">
-                  <Button variant="outline" size="sm">Login</Button>
-                </Link>
-                <Link href="/signup">
-                  <Button size="sm">Sign Up</Button>
-                </Link>
+                {isLoggedIn ? (
+                  <Link href="/dashboard">
+                    <Button size="sm">Dashboard</Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <Button variant="outline" size="sm">Login</Button>
+                    </Link>
+                    <Link href="/signup">
+                      <Button size="sm">Sign Up</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

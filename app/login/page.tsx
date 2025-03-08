@@ -27,13 +27,50 @@ const LoginPage = () => {
   const [serverError, setServerError] = useState("")
   const [userName, setUserName] = useState("")
 
+  // Check if user is already logged in on page load
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        console.log("Checking if user is already logged in...");
+        const response = await fetch('/api/auth/me', {
+          // Add cache: 'no-store' to prevent caching issues
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (response.ok) {
+          // User is already logged in
+          const userData = await response.json();
+          console.log("User already logged in:", userData);
+          
+          if (userData.user && userData.user.name) {
+            setUserName(userData.user.name);
+          }
+          
+          // Show success animation and redirect
+          setIsSuccess(true);
+        } else {
+          console.log("User not logged in yet - showing login form");
+        }
+      } catch (error) {
+        // Not logged in or error checking - this is fine, continue to login form
+        console.log("Error checking authentication:", error);
+      }
+    };
+    
+    // Run the check immediately
+    checkAuthentication();
+  }, []);
+
   // Redirect after success animation completes
   useEffect(() => {
     let redirectTimer: NodeJS.Timeout;
     if (isSuccess) {
       redirectTimer = setTimeout(() => {
         router.push('/dashboard');
-      }, 2000); // Wait for animation to complete before redirecting
+      }, 2500); // Increased from 2000ms to 2500ms to ensure the animation is fully visible
     }
     return () => {
       if (redirectTimer) clearTimeout(redirectTimer);
