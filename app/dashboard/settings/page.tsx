@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Trash2, AlertCircle, Loader2 } from "lucide-react"
+import { Trash2, AlertCircle, Loader2, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { EmailHistory } from "@/components/email-history"
 import { saveAs } from 'file-saver';
@@ -92,6 +92,9 @@ export default function SettingsPage() {
   const [isDeletingSubscriptions, setIsDeletingSubscriptions] = useState(false)
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false)
   const [deletedCount, setDeletedCount] = useState(0)
+
+  // Add a state for the delete account animation
+  const [showDeleteAccountAnimation, setShowDeleteAccountAnimation] = useState(false)
 
   // Fetch user data when component mounts
   useEffect(() => {
@@ -405,11 +408,11 @@ export default function SettingsPage() {
         throw new Error(errorData.message || "Failed to delete account")
       }
       
-      toast({
-        title: "Account deleted",
-        description: "Your account has been permanently deleted. You will be redirected to the home page.",
-        duration: 5000,
-      })
+      // Close the dialog
+      setShowDeleteDialog(false)
+      
+      // Show the animation
+      setShowDeleteAccountAnimation(true)
       
       // Perform a complete logout
       try {
@@ -429,11 +432,13 @@ export default function SettingsPage() {
         console.error("Error during logout after account deletion:", logoutError);
       }
       
-      // Force redirect to home page
+      // Skip toast notification since we're showing the animation
+      
+      // Force redirect to home page after animation completes
       setTimeout(() => {
         console.log("Redirecting to homepage after account deletion");
-        window.location.href = "/"; // Use direct location change instead of router
-      }, 1500);
+        window.location.href = "/";
+      }, 3000);
     } catch (error) {
       console.error("Error deleting account:", error)
       toast({
@@ -441,7 +446,6 @@ export default function SettingsPage() {
         description: error instanceof Error ? error.message : "An error occurred while deleting your account",
         variant: "destructive",
       })
-    } finally {
       setIsDeleting(false)
       setShowDeleteDialog(false)
       setDeleteConfirmText("")
@@ -1239,6 +1243,71 @@ export default function SettingsPage() {
                     transition={{ duration: 1.5 }}
                     className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"
                   ></motion.div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Account Deletion Animation */}
+      {showDeleteAccountAnimation && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-md w-full"
+          >
+            <motion.div 
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 260, 
+                damping: 20,
+                delay: 0.2 
+              }}
+              className="mx-auto mb-6 w-24 h-24 rounded-full bg-red-100 flex items-center justify-center"
+            >
+              <User className="h-12 w-12 text-red-600" />
+            </motion.div>
+            
+            <motion.h2
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="text-3xl font-bold mb-2"
+            >
+              Account Deleted
+            </motion.h2>
+            
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="text-muted-foreground mb-8"
+            >
+              Your account has been permanently deleted. Thank you for using Subscription Tracker.
+            </motion.p>
+            
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="mx-auto"
+            >
+              <div className="relative w-full pt-1">
+                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-red-200">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 2.5 }}
+                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"
+                  ></motion.div>
+                </div>
+                <div className="text-center text-sm text-muted-foreground">
+                  Redirecting to home page...
                 </div>
               </div>
             </motion.div>
