@@ -382,8 +382,10 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
                     variants={dialogItemVariants}
                     initial="hidden"
                     animate="show"
+                    whileHover="hover"
                     transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between rounded-lg border p-3"
+                    className="flex items-center justify-between rounded-lg border p-3 cursor-pointer"
+                    onClick={() => setSelectedSubscription(sub)}
                   >
                     <div>
                       <div className="font-medium">{sub.name}</div>
@@ -450,8 +452,10 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
                     variants={dialogItemVariants}
                     initial="hidden"
                     animate="show"
+                    whileHover="hover"
                     transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between rounded-lg border p-3"
+                    className="flex items-center justify-between rounded-lg border p-3 cursor-pointer"
+                    onClick={() => setSelectedSubscription(sub)}
                   >
                     <div>
                       <div className="font-medium">{sub.name}</div>
@@ -478,6 +482,96 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
           <Button variant="outline" onClick={() => setOpenDialog(null)}>
             Close
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Subscription Detail Dialog */}
+      <Dialog open={!!selectedSubscription} onOpenChange={(open) => !open && setSelectedSubscription(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          {selectedSubscription && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  {selectedSubscription.name}
+                </DialogTitle>
+                <DialogDescription>Subscription details</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Category</h4>
+                    <p className="text-base">{selectedSubscription.category}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Price</h4>
+                    <p className="text-base">${parseFloat(selectedSubscription.price).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Billing Cycle</h4>
+                    <p className="text-base">{selectedSubscription.billingCycle}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Next Payment</h4>
+                    <p className="text-base">{formatDate(selectedSubscription.nextPayment)}</p>
+                  </div>
+                </div>
+
+                {selectedSubscription.description && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Description</h4>
+                    <p className="text-sm mt-1">{selectedSubscription.description}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Monthly Cost</h4>
+                    <p className="text-base font-medium">
+                      ${selectedSubscription.billingCycle === "Monthly" 
+                          ? parseFloat(selectedSubscription.price).toFixed(2) 
+                          : selectedSubscription.billingCycle === "Yearly" 
+                            ? (parseFloat(selectedSubscription.price) / 12).toFixed(2)
+                            : selectedSubscription.billingCycle === "Weekly"
+                              ? (parseFloat(selectedSubscription.price) * 4.33).toFixed(2)
+                              : selectedSubscription.billingCycle === "Quarterly"
+                                ? (parseFloat(selectedSubscription.price) / 3).toFixed(2)
+                                : selectedSubscription.billingCycle === "Biweekly"
+                                  ? (parseFloat(selectedSubscription.price) * 2.17).toFixed(2)
+                                  : parseFloat(selectedSubscription.price).toFixed(2)
+                        }
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Annual Cost</h4>
+                    <p className="text-base font-medium">
+                      ${calculateAnnualCost(selectedSubscription).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedSubscription(null)}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSelectedSubscription(null);
+                    setOpenDialog(null);
+                    router.push(`/dashboard/subscriptions/${selectedSubscription._id}`);
+                  }}
+                >
+                  Edit Subscription
+                </Button>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -410,8 +410,8 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
             </ResponsiveContainer>
           </div>
           <div className="mt-4 text-center">
-            <div className="text-sm font-medium">Current Monthly</div>
-            <div className="text-2xl font-bold">${currentTotal.toFixed(2)}</div>
+            <div className="text-sm font-medium">Annual Cost</div>
+            <div className="text-2xl font-bold">${(currentTotal * 12).toFixed(2)}</div>
             <div className="text-xs text-muted-foreground">Click for details</div>
           </div>
         </CardContent>
