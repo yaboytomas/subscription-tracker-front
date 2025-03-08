@@ -114,7 +114,7 @@ const generateTimeData = (subscriptions: Subscription[], months: number) => {
       const date = new Date();
       date.setMonth(date.getMonth() - 6 + i);
       return {
-        month: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        month: date.toLocaleDateString('en-US', { month: 'long' }).substring(0, 3),
         amount: 0,
         isProjection: date > new Date(),
         changeText: ''
@@ -145,7 +145,7 @@ const generateTimeData = (subscriptions: Subscription[], months: number) => {
   // Always show Jan-Dec of current year
   for (let month = 0; month < 12; month++) {
     const date = new Date(currentYear, month, 1)
-    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+    const monthKey = date.toLocaleDateString('en-US', { month: 'long'}).substring(0, 3)
     const isPast = date <= today
     const isProjection = !isPast
     
@@ -166,7 +166,7 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<CategoryDetails | null>(null)
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
-  const [timeRange, setTimeRange] = useState("3")
+  const [timeRange] = useState("12")
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -322,7 +322,10 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                     backgroundColor: isDark ? 'hsl(var(--popover))' : 'white',
                     borderColor: 'hsl(var(--border))',
                     borderRadius: '0.5rem',
-                    color: 'hsl(var(--foreground))'
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
+                  }}
+                  itemStyle={{
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
                   }}
                   labelStyle={{ 
                     color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))' 
@@ -342,22 +345,12 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
       <Card className="w-full cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog(true)}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Spending Over Time</CardTitle>
-          <ToggleGroup 
-            type="single" 
-            value={timeRange} 
-            onValueChange={(value) => setTimeRange(value || "3")}
-            className="border rounded-md"
-          >
-            <ToggleGroupItem value="3" size="sm">3M</ToggleGroupItem>
-            <ToggleGroupItem value="6" size="sm">6M</ToggleGroupItem>
-            <ToggleGroupItem value="12" size="sm">1Y</ToggleGroupItem>
-          </ToggleGroup>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={timeData.slice(timeData.length - parseInt(timeRange))}
+                data={timeData}
                 margin={{
                   top: 20,
                   right: 20,
@@ -366,7 +359,17 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <XAxis 
+                  dataKey="month" 
+                  tickLine={false} 
+                  axisLine={false}
+                  tick={{ fontSize: 12 }}
+                  tickMargin={8}
+                  angle={-45}
+                  textAnchor="end"
+                  interval={0}
+                  height={60}
+                />
                 <YAxis 
                   tickFormatter={value => `$${value}`} 
                   tickLine={false} 
@@ -379,17 +382,14 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                     backgroundColor: isDark ? 'hsl(var(--popover))' : 'white',
                     borderColor: 'hsl(var(--border))',
                     borderRadius: '0.5rem',
-                    color: 'hsl(var(--foreground))'
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
+                  }}
+                  itemStyle={{
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
                   }}
                   labelStyle={{ 
                     color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
                   }}
-                />
-                <ReferenceLine 
-                  x={timeData.findIndex(d => !d.isProjection) < 0 ? null : timeData[timeData.findIndex(d => !d.isProjection)].month} 
-                  stroke="hsl(var(--border))" 
-                  strokeDasharray="3 3" 
-                  label={{ value: 'Now', position: 'insideTopRight', fill: 'hsl(var(--muted-foreground))' }} 
                 />
                 <Bar 
                   dataKey="amount" 
@@ -397,11 +397,6 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                   opacity={0.7}
                   barSize={30}
                   radius={[4, 4, 0, 0]}
-                  activeBar={{ 
-                    fill: isDark ? 'hsl(var(--accent))' : 'hsl(var(--muted))',
-                    stroke: isDark ? 'hsl(var(--accent-foreground))' : 'hsl(var(--accent))',
-                    strokeWidth: 1
-                  }}
                 >
                   {timeData.map((entry, index) => (
                     <Cell 
