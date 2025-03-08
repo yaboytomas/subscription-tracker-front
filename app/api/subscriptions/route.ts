@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Subscription from '@/models/Subscription';
 import { getCurrentUser } from '@/lib/auth';
+import { updateRegistrySubscriptions } from '@/lib/registry-utils';
 
 // GET all subscriptions for the authenticated user
 export async function GET(req: NextRequest) {
@@ -118,6 +119,15 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       nextPayment: nextPayment.toISOString().split('T')[0], // Format as YYYY-MM-DD
     });
+    
+    // Update the user registry with the new subscription
+    try {
+      await updateRegistrySubscriptions(user.id);
+      console.log(`User registry updated with new subscription for user ${user.id}`);
+    } catch (registryError) {
+      // Log error but don't fail the request
+      console.error('Error updating user registry with new subscription:', registryError);
+    }
     
     return NextResponse.json({
       success: true,

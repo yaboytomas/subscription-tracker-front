@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { motion, AnimatePresence } from "framer-motion"
 
 const SignupPage = () => {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,6 +27,19 @@ const SignupPage = () => {
   })
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
   const [serverError, setServerError] = useState("")
+
+  // Redirect after success animation completes
+  useEffect(() => {
+    let redirectTimer: NodeJS.Timeout;
+    if (isSuccess) {
+      redirectTimer = setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000); // Wait for animation to complete before redirecting
+    }
+    return () => {
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
+  }, [isSuccess, router]);
 
   const validateForm = (): boolean => {
     const errors: { [key: string]: string } = {}
@@ -98,8 +113,10 @@ const SignupPage = () => {
         description: "Your account has been created successfully.",
       })
       
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Show success state with animation
+      setIsSuccess(true)
+      
+      // Redirect will happen after animation via the useEffect
     } catch (err) {
       console.error(err)
       // Set server error message
@@ -109,9 +126,55 @@ const SignupPage = () => {
         description: err instanceof Error ? err.message : "Something went wrong. Please try again.",
         variant: "destructive",
       })
-    } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex justify-center mb-6"
+          >
+            <div className="rounded-full bg-green-100 p-4">
+              <CheckCircle className="h-16 w-16 text-green-600" />
+            </div>
+          </motion.div>
+          <motion.h2 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="text-3xl font-bold mb-2"
+          >
+            Welcome, {formData.name}!
+          </motion.h2>
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="text-muted-foreground mb-8"
+          >
+            Your account has been created successfully. Taking you to your dashboard...
+          </motion.p>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+          >
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          </motion.div>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
@@ -200,18 +263,25 @@ const SignupPage = () => {
               )}
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Create account"}
+              {isLoading ? (
+                <span className="flex items-center">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </span>
+              ) : (
+                "Create account"
+              )}
             </Button>
-            <div className="text-center text-sm">
-              Already have an account?{" "}
-              <Link href="/login" className="text-primary hover:underline">
-                Login
-              </Link>
-            </div>
           </CardFooter>
         </form>
+        <div className="px-8 pb-6 text-center text-sm">
+          Already have an account?{" "}
+          <Link href="/login" className="text-primary hover:underline">
+            Login
+          </Link>
+        </div>
       </Card>
     </div>
   )

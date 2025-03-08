@@ -186,4 +186,108 @@ export async function sendTestEmail(email: string) {
     console.error('Failed to send test email:', error);
     return { success: false, error };
   }
+}
+
+/**
+ * Sends a notification to the previous email address when email is changed
+ */
+export async function sendEmailChangeNotificationToOldEmail(user: { 
+  name: string, 
+  previousEmail: string, 
+  newEmail: string, 
+  ipAddress?: string 
+}) {
+  try {
+    console.log(`Sending email change notification to previous email: ${user.previousEmail}`);
+    
+    // During testing with free Resend account, always send to your verified email
+    const recipient = process.env.NODE_ENV === 'production' ? user.previousEmail : 'tomasszabo94@gmail.com';
+    
+    // Format the IP address for display, if available
+    const ipInfo = user.ipAddress ? `from IP address ${user.ipAddress}` : '';
+    
+    const data = await resend.emails.send({
+      from: 'Subscription Tracker <onboarding@resend.dev>', // Using default sender that works without domain verification
+      to: recipient,
+      subject: 'Your Email Address Has Been Changed',
+      html: `
+        <h1>Email Address Change Notification</h1>
+        <p>Hello ${user.name},</p>
+        <p>We're contacting you because your email address for Subscription Tracker has been changed.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+          <p><strong>Previous Email:</strong> ${user.previousEmail}</p>
+          <p><strong>New Email:</strong> ${user.newEmail}</p>
+          <p><strong>Changed:</strong> ${new Date().toLocaleString()} ${ipInfo}</p>
+        </div>
+        
+        <p>If you made this change, no further action is required.</p>
+        
+        <p><strong>Did not make this change?</strong> If you did not authorize this change, please:</p>
+        <ol>
+          <li>Reset your password immediately by visiting <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/forgot-password">the password reset page</a></li>
+          <li>Contact our support team at <a href="mailto:support@example.com">support@example.com</a></li>
+        </ol>
+        
+        <p>For security reasons, this is the last message we'll send to this email address unless you change your email back.</p>
+        
+        <p>Best regards,<br>The Subscription Tracker Security Team</p>
+      `
+    });
+    
+    console.log('Email change notification sent to previous email:', data);
+    return { success: true, data };
+  } catch (error) {
+    console.error('Failed to send email change notification to previous email:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Sends a confirmation to the new email address when email is changed
+ */
+export async function sendEmailChangeConfirmationToNewEmail(user: { 
+  name: string, 
+  previousEmail: string, 
+  newEmail: string 
+}) {
+  try {
+    console.log(`Sending email change confirmation to new email: ${user.newEmail}`);
+    
+    // During testing with free Resend account, always send to your verified email
+    const recipient = process.env.NODE_ENV === 'production' ? user.newEmail : 'tomasszabo94@gmail.com';
+    
+    const data = await resend.emails.send({
+      from: 'Subscription Tracker <onboarding@resend.dev>', // Using default sender that works without domain verification
+      to: recipient,
+      subject: 'Email Address Change Confirmation',
+      html: `
+        <h1>Email Address Change Confirmation</h1>
+        <p>Hello ${user.name},</p>
+        <p>This email confirms that your email address for Subscription Tracker has been successfully changed.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+          <p><strong>Previous Email:</strong> ${user.previousEmail}</p>
+          <p><strong>New Email:</strong> ${user.newEmail}</p>
+          <p><strong>Changed:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+        
+        <p>This email will now be used for all communications related to your Subscription Tracker account.</p>
+        
+        <p>If you did not make this change, please:</p>
+        <ol>
+          <li>Reset your password immediately by visiting <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/forgot-password">the password reset page</a></li>
+          <li>Contact our support team at <a href="mailto:support@example.com">support@example.com</a></li>
+        </ol>
+        
+        <p>Best regards,<br>The Subscription Tracker Team</p>
+      `
+    });
+    
+    console.log('Email change confirmation sent to new email:', data);
+    return { success: true, data };
+  } catch (error) {
+    console.error('Failed to send email change confirmation to new email:', error);
+    return { success: false, error };
+  }
 } 

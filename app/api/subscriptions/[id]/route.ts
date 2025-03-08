@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import Subscription from '@/models/Subscription';
 import { getCurrentUser } from '@/lib/auth';
 import mongoose from 'mongoose';
+import { updateRegistrySubscriptions } from '@/lib/registry-utils';
 
 // Helper function to validate MongoDB ObjectId
 const isValidObjectId = (id: string) => {
@@ -108,6 +109,15 @@ export async function PUT(
       );
     }
     
+    // Update the user registry with the updated subscription
+    try {
+      await updateRegistrySubscriptions(user.id);
+      console.log(`User registry updated after subscription update for user ${user.id}`);
+    } catch (registryError) {
+      // Log error but don't fail the request
+      console.error('Error updating user registry after subscription update:', registryError);
+    }
+    
     return NextResponse.json({
       success: true,
       subscription: updatedSubscription,
@@ -160,6 +170,15 @@ export async function DELETE(
         { success: false, message: 'Subscription not found' },
         { status: 404 }
       );
+    }
+    
+    // Update the user registry after subscription deletion
+    try {
+      await updateRegistrySubscriptions(user.id);
+      console.log(`User registry updated after subscription deletion for user ${user.id}`);
+    } catch (registryError) {
+      // Log error but don't fail the request
+      console.error('Error updating user registry after subscription deletion:', registryError);
     }
     
     return NextResponse.json({

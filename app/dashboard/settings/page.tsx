@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Trash2, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { EmailHistory } from "@/components/email-history"
 
 // For profile refresh events
 const PROFILE_UPDATE_EVENT = "profile-updated"
@@ -54,8 +55,10 @@ export default function SettingsPage() {
   const [emailChangeData, setEmailChangeData] = useState({
     newEmail: "",
     password: "",
+    reason: "",
   })
   const [isChangingEmail, setIsChangingEmail] = useState(false)
+  const [emailChangeError, setEmailChangeError] = useState<string | null>(null)
   
   // Password change state
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
@@ -130,9 +133,16 @@ export default function SettingsPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
   
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setEmailChangeData((prev) => ({ ...prev, [name]: value }))
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setEmailChangeData({
+      ...emailChangeData,
+      [e.target.name]: e.target.value,
+    })
+    
+    // Clear errors when user starts typing
+    if (emailChangeError) {
+      setEmailChangeError(null)
+    }
   }
   
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,15 +198,25 @@ export default function SettingsPage() {
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setIsChangingEmail(true)
+    setEmailChangeError(null)
     
     try {
       // Validate inputs
       if (!emailChangeData.newEmail) {
-        throw new Error('Please enter a new email address');
+        setEmailChangeError('Please enter a new email address')
+        return
       }
       
       if (!emailChangeData.password) {
-        throw new Error('Please enter your password to confirm');
+        setEmailChangeError('Please enter your password to confirm')
+        return
+      }
+      
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(emailChangeData.newEmail)) {
+        setEmailChangeError('Please enter a valid email address')
+        return
       }
       
       // Call the API to update the email
@@ -214,28 +234,42 @@ export default function SettingsPage() {
         throw new Error(data.message || 'Failed to update email');
       }
       
-      toast({
-        title: "Email updated",
-        description: "Your email has been updated successfully.",
-      })
-      
-      // Trigger a refresh of user data
-      window.dispatchEvent(new Event(PROFILE_UPDATE_EVENT));
-      
       // Close the dialog
       setShowEmailDialog(false)
       
-      // Reset form
+      // Only update UI and show toast if email actually changed
+      if (data.data && data.data.previousEmail !== data.data.newEmail) {
+        // Update the form data with the new email
+        setFormData({
+          ...formData,
+          email: emailChangeData.newEmail,
+        })
+        
+        toast({
+          title: "Email updated",
+          description: `Your email has been changed from ${data.data.previousEmail} to ${data.data.newEmail}`,
+          duration: 5000,
+        })
+        
+        // Trigger a refresh of user data
+        fetchUserData()
+      } else {
+        toast({
+          title: "No change needed",
+          description: "Your email remains unchanged.",
+        })
+      }
+      
+      // Reset the email change form
       setEmailChangeData({
         newEmail: "",
         password: "",
+        reason: "",
       })
+      
     } catch (err) {
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      console.error('Error changing email:', err);
+      setEmailChangeError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
     } finally {
       setIsChangingEmail(false)
     }
@@ -508,6 +542,13 @@ export default function SettingsPage() {
 
         <Separator />
 
+        {/* Email History - Only show if user data is loaded */}
+        {!isLoadingUser && (
+          <div className="mb-8">
+            <EmailHistory userId={formData.id || ""} />
+          </div>
+        )}
+
         {/* Data & Privacy */}
         <Card className="border-none shadow-none">
           <CardHeader className="pb-4">
@@ -576,55 +617,91 @@ export default function SettingsPage() {
         </Card>
       </div>
       
-      {/* Change Email Dialog */}
-      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-        <DialogContent>
+      {/* Email Change Dialog */}
+      <Dialog open={showEmailDialog} onOpenChange={(open) => {
+        setShowEmailDialog(open);
+        if (!open) {
+          // Reset form and error when dialog closes
+          setEmailChangeData({
+            newEmail: "",
+            password: "",
+            reason: "",
+          });
+          setEmailChangeError(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Change Email</DialogTitle>
+            <DialogTitle>Change Email Address</DialogTitle>
             <DialogDescription>
-              Update your email address. We'll send a verification link to your new email.
+              Update your email address. This will require password verification for security.
+              Notifications will be sent to both your current and new email addresses.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEmailSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="current-email">Current Email</Label>
-                <Input 
-                  id="current-email" 
-                  value={formData.email} 
-                  disabled 
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentEmail">Current Email</Label>
+                <Input
+                  id="currentEmail"
+                  value={formData.email}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="new-email">New Email</Label>
-                <Input 
-                  id="new-email" 
+              <div className="space-y-2">
+                <Label htmlFor="newEmail">New Email</Label>
+                <Input
+                  id="newEmail"
                   name="newEmail"
-                  type="email" 
+                  type="email"
+                  placeholder="your.new.email@example.com"
                   value={emailChangeData.newEmail}
                   onChange={handleEmailChange}
-                  required 
+                  required
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="confirm-password">Password</Label>
-                <Input 
-                  id="confirm-password" 
+              <div className="space-y-2">
+                <Label htmlFor="reason">Reason for Change (Optional)</Label>
+                <Input
+                  id="reason"
+                  name="reason"
+                  type="text"
+                  placeholder="Why are you changing your email?"
+                  value={emailChangeData.reason}
+                  onChange={handleEmailChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emailChangePassword">Confirm with Password</Label>
+                <Input
+                  id="emailChangePassword"
                   name="password"
-                  type="password" 
-                  placeholder="Enter your password to confirm" 
+                  type="password"
+                  placeholder="Enter your current password"
                   value={emailChangeData.password}
                   onChange={handleEmailChange}
-                  required 
+                  required
                 />
               </div>
+              
+              {emailChangeError && (
+                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+                  {emailChangeError}
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" type="button" onClick={() => setShowEmailDialog(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isChangingEmail}>
-                {isChangingEmail ? "Updating..." : "Update Email"}
+                {isChangingEmail ? (
+                  <>
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>
+                    Updating...
+                  </>
+                ) : "Update Email"}
               </Button>
             </DialogFooter>
           </form>
