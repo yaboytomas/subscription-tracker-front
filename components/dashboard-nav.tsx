@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { CalendarClock, CreditCard, Home, PlusCircle, Settings } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { CalendarClock, CreditCard, Home, LogOut, PlusCircle, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/use-toast"
 
 const navItems = [
   {
@@ -31,6 +32,40 @@ const navItems = [
 
 export function DashboardNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const handleLogout = async () => {
+    try {
+      // Call the logout API
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error('Logout failed')
+      }
+      
+      // Show toast notification
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully.",
+      })
+      
+      // Redirect to login page
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast({
+        title: "Error",
+        description: "Logout failed. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   return (
     <div className="group flex w-16 flex-col border-r bg-background p-2 md:w-60">
@@ -54,6 +89,16 @@ export function DashboardNav() {
               </Button>
             </Link>
           ))}
+          
+          {/* Logout button */}
+          <Button
+            variant="ghost"
+            className="flex justify-start items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground mt-auto"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden md:inline-flex">Logout</span>
+          </Button>
         </nav>
       </div>
     </div>

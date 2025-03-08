@@ -1,6 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { DashboardNav } from "@/components/dashboard-nav"
 import { UserNav } from "@/components/user-nav"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -11,6 +13,8 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const router = useRouter()
+  
   return (
     <div className="flex min-h-screen flex-col">
       <motion.header 
@@ -21,9 +25,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       >
         <div className="flex h-16 items-center justify-between px-6">
           <motion.div 
-            className="flex items-center gap-2 font-bold text-xl"
+            className="flex items-center gap-2 font-bold text-xl cursor-pointer"
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300, damping: 10 }}
+            onClick={() => router.push('/dashboard')}
           >
             <span className="text-primary">Sub</span>
             <span>0</span>

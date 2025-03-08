@@ -1,64 +1,143 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { CalendarClock } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
 
-// Sample data - would be fetched from API in a real app
+// Define subscription type
+interface Subscription {
+  _id: string;
+  name: string;
+  price: string;
+  billingCycle: string;
+  nextPayment: string;
+  category: string;
+  startDate: string;
+  description: string;
+  userId: string;
+}
+
+// Calculate days left between today and a given date
 const calculateDaysLeft = (dateString: string) => {
   const today = new Date()
+  today.setHours(0, 0, 0, 0) // Set to beginning of day
   const paymentDate = new Date(dateString)
+  paymentDate.setHours(0, 0, 0, 0) // Set to beginning of day
   const diffTime = paymentDate.getTime() - today.getTime()
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
-const reminders = [
-  {
-    id: "1",
-    name: "Netflix",
-    price: 15.99,
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    daysLeft: 7,
-  },
-  {
-    id: "2",
-    name: "Spotify",
-    price: 9.99,
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    daysLeft: 7,
-  },
-  {
-    id: "3",
-    name: "Adobe Creative Cloud",
-    price: 52.99,
-    date: "2025-04-22",
-    daysLeft: calculateDaysLeft("2025-04-22"),
-  },
-  {
-    id: "5",
-    name: "Disney+",
-    price: 7.99,
-    date: "2025-04-18",
-    daysLeft: calculateDaysLeft("2025-04-18"),
-  },
-  {
-    id: "7",
-    name: "YouTube Premium",
-    price: 11.99,
-    date: "2025-04-12",
-    daysLeft: calculateDaysLeft("2025-04-12"),
-  },
-  {
-    id: "8",
-    name: "iCloud Storage",
-    price: 2.99,
-    date: "2025-04-08",
-    daysLeft: calculateDaysLeft("2025-04-08"),
-  },
-].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+// Calculate next payment date based on billing cycle
+const calculateNextPaymentDate = (subscription: Subscription) => {
+  const { startDate, billingCycle, nextPayment } = subscription;
+  
+  // Parse dates
+  const start = new Date(startDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // If nextPayment is already in the future, return it
+  const nextPaymentDate = new Date(nextPayment);
+  if (nextPaymentDate > today) {
+    return nextPayment;
+  }
+  
+  // Calculate new next payment date based on billing cycle
+  let newNextPayment = new Date(nextPaymentDate);
+  
+  while (newNextPayment <= today) {
+    switch (billingCycle) {
+      case 'Monthly':
+        newNextPayment.setMonth(newNextPayment.getMonth() + 1);
+        break;
+      case 'Yearly':
+        newNextPayment.setFullYear(newNextPayment.getFullYear() + 1);
+        break;
+      case 'Weekly':
+        newNextPayment.setDate(newNextPayment.getDate() + 7);
+        break;
+      case 'Biweekly':
+        newNextPayment.setDate(newNextPayment.getDate() + 14);
+        break;
+      case 'Quarterly':
+        newNextPayment.setMonth(newNextPayment.getMonth() + 3);
+        break;
+      default:
+        newNextPayment.setMonth(newNextPayment.getMonth() + 1);
+        break;
+    }
+  }
+  
+  return newNextPayment.toISOString().split('T')[0];
+};
 
 export function UpcomingReminders() {
+  const { toast } = useToast()
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch subscriptions from the API
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch('/api/subscriptions');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch subscriptions');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setSubscriptions(data.subscriptions || []);
+        } else {
+          throw new Error(data.message || 'Failed to fetch subscriptions');
+        }
+      } catch (err) {
+        console.error('Error fetching subscriptions:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+        toast({
+          title: "Error",
+          description: err instanceof Error ? err.message : 'Failed to load subscriptions',
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchSubscriptions();
+  }, [toast]);
+
+  // Process subscriptions to create reminders sorted by next payment date
+  const reminders = subscriptions
+    .map(sub => {
+      // Calculate accurate next payment date
+      const accurateNextPayment = calculateNextPaymentDate(sub);
+      
+      return {
+        _id: sub._id,
+        name: sub.name,
+        price: parseFloat(sub.price),
+        date: accurateNextPayment,
+        daysLeft: calculateDaysLeft(accurateNextPayment),
+        originalDate: sub.nextPayment
+      };
+    })
+    // Only include future payments
+    .filter(reminder => reminder.daysLeft >= 0)
+    // Show soonest payments first
+    .sort((a, b) => a.daysLeft - b.daysLeft);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "short",
@@ -72,6 +151,31 @@ export function UpcomingReminders() {
     if (days === 0) return "Today"
     if (days === 1) return "Tomorrow"
     return `In ${days} days`
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-20 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-destructive">Error: {error}</p>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -91,12 +195,11 @@ export function UpcomingReminders() {
       ) : (
         reminders.map((reminder, index) => (
           <motion.div
-            key={reminder.id}
+            key={reminder._id}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
             whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
           >
             <Card className="overflow-hidden">
               <CardContent className="p-0">
@@ -104,13 +207,11 @@ export function UpcomingReminders() {
                   <div
                     className={cn(
                       "flex h-full w-2 flex-shrink-0",
-                      reminder.daysLeft < 0
-                        ? "bg-destructive"
-                        : reminder.daysLeft === 0
-                          ? "bg-orange-500"
-                          : reminder.daysLeft <= 3
-                            ? "bg-yellow-500"
-                            : "bg-green-500",
+                      reminder.daysLeft === 0
+                        ? "bg-orange-500"
+                        : reminder.daysLeft <= 3
+                          ? "bg-yellow-500"
+                          : "bg-green-500"
                     )}
                   />
                   <div className="flex flex-1 items-center justify-between p-4">
@@ -123,13 +224,11 @@ export function UpcomingReminders() {
                       <div
                         className={cn(
                           "text-xs",
-                          reminder.daysLeft < 0
-                            ? "text-destructive"
-                            : reminder.daysLeft === 0
-                              ? "text-orange-500"
-                              : reminder.daysLeft <= 3
-                                ? "text-yellow-500"
-                                : "text-green-500",
+                          reminder.daysLeft === 0
+                            ? "text-orange-500"
+                            : reminder.daysLeft <= 3
+                              ? "text-yellow-500"
+                              : "text-green-500"
                         )}
                       >
                         {getDaysText(reminder.daysLeft)}
