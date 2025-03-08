@@ -96,6 +96,7 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
   const { toast } = useToast()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [subscriptionList, setSubscriptionList] = useState<Subscription[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -183,43 +184,65 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
   })
 
   const handleDelete = async () => {
-    if (deleteId) {
-      try {
-        const response = await fetch(`/api/subscriptions/${deleteId}`, {
-          method: 'DELETE',
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to delete subscription');
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          setSubscriptionList(subscriptionList.filter((sub) => sub._id !== deleteId));
-          toast({
-            title: "Subscription deleted",
-            description: "The subscription has been removed from your account.",
-          });
-          
-          // Refresh dashboard data
-          if (refreshData) {
-            refreshData();
-          }
-        } else {
-          throw new Error(data.message || 'Failed to delete subscription');
-        }
-      } catch (err) {
-        console.error('Error deleting subscription:', err);
-        toast({
-          title: "Error",
-          description: err instanceof Error ? err.message : 'Failed to delete subscription',
-          variant: "destructive",
-        });
-      } finally {
-        setIsDeleteDialogOpen(false);
-        setDeleteId(null);
+    if (!deleteId) {
+      console.error("No subscription ID provided for deletion");
+      toast({
+        title: "Error",
+        description: "No subscription selected for deletion",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log(`Attempting to delete subscription with ID: ${deleteId}`);
+    setIsDeleting(true);
+    
+    try {
+      const response = await fetch(`/api/subscriptions/${deleteId}`, {
+        method: 'DELETE',
+      });
+      
+      console.log(`Delete API response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Delete API error: ${errorText}`);
+        throw new Error(`Failed to delete subscription: ${response.status} ${response.statusText}`);
       }
+      
+      const data = await response.json();
+      console.log("Delete API response data:", data);
+      
+      if (data.success) {
+        // Update local state to remove the deleted subscription
+        setSubscriptionList(subscriptionList.filter((sub) => sub._id !== deleteId));
+        
+        toast({
+          title: "Subscription deleted",
+          description: "The subscription has been successfully removed.",
+          duration: 5000,
+        });
+        
+        // Refresh dashboard data
+        if (refreshData) {
+          console.log("Refreshing dashboard data after deletion");
+          refreshData();
+        }
+      } else {
+        throw new Error(data.message || 'Failed to delete subscription');
+      }
+    } catch (err) {
+      console.error('Error deleting subscription:', err);
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : 'Failed to delete subscription',
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setDeleteId(null);
     }
   }
 
@@ -623,17 +646,49 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
+        setIsDeleteDialogOpen(open);
+        if (!open) setDeleteId(null);
+      }}>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this subscription from your account.
+            <AlertDialogTitle className="text-xl text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5" /> 
+              Confirm Deletion
+            </AlertDialogTitle>
+            <AlertDialogDescription className="mt-2">
+              <p className="mb-2 font-medium">Are you sure you want to delete this subscription?</p>
+              <p>This action <span className="font-semibold">cannot be undone</span>. This will permanently remove the subscription from your account and the database.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteId(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel 
+              onClick={() => {
+                setDeleteId(null);
+                console.log("Delete operation cancelled");
+              }}
+              className="border-gray-300"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                console.log("Confirming delete for ID:", deleteId);
+                handleDelete();
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>
+                  Deleting...
+                </>
+              ) : (
+                "Delete Subscription"
+              )}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -751,10 +806,13 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => {
-                            setDeleteId(subscription._id)
-                            setIsDeleteDialogOpen(true)
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDeleteId(subscription._id);
+                            setIsDeleteDialogOpen(true);
+                            console.log("Opening delete dialog for subscription:", subscription.name);
                           }}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />

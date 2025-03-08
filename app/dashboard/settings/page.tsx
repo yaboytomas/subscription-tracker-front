@@ -20,6 +20,18 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Trash2, AlertCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 // For profile refresh events
 const PROFILE_UPDATE_EVENT = "profile-updated"
@@ -53,6 +65,12 @@ export default function SettingsPage() {
     confirmPassword: "",
   })
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+
+  // Delete account state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
 
   // Fetch user data when component mounts
   useEffect(() => {
@@ -309,6 +327,75 @@ export default function SettingsPage() {
 
   const userInitials = getInitials(formData.name);
 
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "delete my account") {
+      toast({
+        title: "Confirmation text doesn't match",
+        description: "Please type 'delete my account' to confirm deletion",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    setIsDeleting(true)
+    
+    try {
+      const response = await fetch("/api/auth/delete-account", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to delete account")
+      }
+      
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently deleted. You will be redirected to the home page.",
+        duration: 5000,
+      })
+      
+      // Perform a complete logout
+      try {
+        // Call logout API to clear server-side cookies
+        await fetch("/api/auth/logout", {
+          method: "POST",
+        });
+        
+        // Clear any client-side storage
+        if (typeof window !== "undefined") {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+        
+        console.log("Authentication state cleared");
+      } catch (logoutError) {
+        console.error("Error during logout after account deletion:", logoutError);
+      }
+      
+      // Force redirect to home page
+      setTimeout(() => {
+        console.log("Redirecting to homepage after account deletion");
+        window.location.href = "/"; // Use direct location change instead of router
+      }, 1500);
+    } catch (error) {
+      console.error("Error deleting account:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An error occurred while deleting your account",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
+      setDeleteConfirmText("")
+    }
+  }
+
   return (
     <div className="container max-w-5xl py-6 space-y-8">
       <div className="space-y-2">
@@ -409,7 +496,12 @@ export default function SettingsPage() {
               </Button>
             </div>
             <div className="flex justify-end pt-2">
-              <Button variant="destructive">Delete Account</Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                Delete Account
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -596,6 +688,63 @@ export default function SettingsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete Your Account
+            </AlertDialogTitle>
+            <AlertDialogDescription className="mt-2">
+              <div className="space-y-2">
+                <div className="flex items-start gap-2 text-amber-600 bg-amber-50 p-2 rounded-md">
+                  <AlertCircle className="h-5 w-5 mt-0.5" />
+                  <p>This action is <span className="font-bold">permanent and irreversible</span>. All your data, including subscriptions and personal information will be deleted.</p>
+                </div>
+                <p>To confirm, please type <span className="font-bold">delete my account</span> below:</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <Input 
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type 'delete my account'"
+              className="w-full"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setDeleteConfirmText("");
+                console.log("Delete account cancelled");
+              }}
+              className="border-gray-300"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteAccount();
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              disabled={deleteConfirmText !== "delete my account" || isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>
+                  Deleting...
+                </>
+              ) : (
+                "Delete Account"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

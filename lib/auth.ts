@@ -34,7 +34,30 @@ export const setTokenCookie = (token: string) => {
 
 // Delete auth cookie
 export const deleteTokenCookie = () => {
+  // Standard deletion
   cookies().delete('token');
+  
+  // Force expiration by setting to epoch time
+  cookies().set({
+    name: 'token',
+    value: '',
+    httpOnly: true,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 0,
+    expires: new Date(0),
+    sameSite: 'strict',
+  });
+};
+
+// Verify token without database lookup
+export const verifyToken = (token: string) => {
+  try {
+    return jwt.verify(token, JWT_SECRET) as { id: string; email: string; name: string };
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return null;
+  }
 };
 
 // Get current user from token
