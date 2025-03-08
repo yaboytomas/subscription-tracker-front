@@ -111,6 +111,55 @@ export async function sendPaymentReminderEmail(user: { email: string, name: stri
 }
 
 /**
+ * Sends a password reset email with a token link
+ */
+export async function sendPasswordResetEmail(user: { email: string, name: string }, resetToken: string) {
+  try {
+    console.log(`Attempting to send password reset email to ${user.email}`);
+    
+    // During testing with free Resend account, always send to your verified email
+    const recipient = process.env.NODE_ENV === 'production' ? user.email : 'tomasszabo94@gmail.com';
+    
+    // Create the reset URL - use the deployment URL or localhost for development
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
+    
+    const data = await resend.emails.send({
+      from: 'Subscription Tracker <onboarding@resend.dev>', // Default sender that works without domain verification
+      to: recipient,
+      subject: 'Reset Your Password - Subscription Tracker',
+      html: `
+        <h1>Password Reset Request</h1>
+        <p>Hello ${user.name},</p>
+        <p>We received a request to reset your password for your Subscription Tracker account.</p>
+        <p>To reset your password, please click the button below:</p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${resetUrl}" style="background-color: #0070f3; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; display: inline-block; font-weight: bold;">
+            Reset Password
+          </a>
+        </div>
+        
+        <p>Or copy and paste this URL into your browser: <br>
+        <a href="${resetUrl}">${resetUrl}</a></p>
+        
+        <p>This reset link will expire in 1 hour for security reasons.</p>
+        
+        <p>If you did not request a password reset, you can safely ignore this email. Your password will not be changed.</p>
+        
+        <p>Best regards,<br>The Subscription Tracker Team</p>
+      `
+    });
+    
+    console.log('Password reset email sent:', data);
+    return { success: true, data };
+  } catch (error) {
+    console.error('Failed to send password reset email:', error);
+    return { success: false, error };
+  }
+}
+
+/**
  * For testing purposes only
  */
 export async function sendTestEmail(email: string) {

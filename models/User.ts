@@ -6,6 +6,8 @@ export interface IUser extends mongoose.Document {
   email: string;
   password: string;
   bio?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -34,6 +36,14 @@ const UserSchema = new mongoose.Schema<IUser>(
     bio: {
       type: String,
       maxlength: [500, 'Bio cannot be more than 500 characters'],
+    },
+    resetPasswordToken: {
+      type: String,
+      select: false, // Don't return this field by default
+    },
+    resetPasswordExpires: {
+      type: Date,
+      select: false, // Don't return this field by default
     },
   },
   { timestamps: true }

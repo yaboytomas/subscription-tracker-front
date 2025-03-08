@@ -32,17 +32,31 @@ const ForgotPasswordPage = () => {
     setIsLoading(true)
 
     try {
-      // This would be replaced with your actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Make API call to forgot-password endpoint
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
 
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send reset link")
+      }
+
+      // Show success message regardless of whether the email exists
+      // This prevents email enumeration attacks
       setIsSubmitted(true)
 
       toast({
         title: "Check your email",
-        description: "We&apos;ve sent you a password reset link.",
+        description: "We've sent you a password reset link if the email exists in our system.",
       })
     } catch (err) {
-      console.error(err)
+      console.error("Error requesting password reset:", err)
       toast({
         title: "Error",
         description: err instanceof Error ? err.message : "Something went wrong. Please try again.",
