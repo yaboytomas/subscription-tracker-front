@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Trash2, AlertCircle, Loader2, User } from "lucide-react"
+import { Trash2, AlertCircle, Loader2, User, CheckIcon, MailIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { EmailHistory } from "@/components/email-history"
 import { saveAs } from 'file-saver';
@@ -102,6 +102,10 @@ export default function SettingsPage() {
     reminderFrequency: '3days',
   });
   const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
+
+  // Add these states after the other state declarations
+  const [showPasswordChangeSuccess, setShowPasswordChangeSuccess] = useState(false)
+  const [showEmailChangeSuccess, setShowEmailChangeSuccess] = useState(false)
 
   // Fetch user data when component mounts
   useEffect(() => {
@@ -270,7 +274,7 @@ export default function SettingsPage() {
       // Close the dialog
       setShowEmailDialog(false)
       
-      // Only update UI and show toast if email actually changed
+      // Only update UI and show animation if email actually changed
       if (data.data && data.data.previousEmail !== data.data.newEmail) {
         // Update the form data with the new email
         setFormData({
@@ -278,11 +282,17 @@ export default function SettingsPage() {
           email: emailChangeData.newEmail,
         })
         
-        toast({
-          title: "Email updated",
-          description: `Your email has been changed from ${data.data.previousEmail} to ${data.data.newEmail}`,
-          duration: 5000,
-        })
+        // Store email change data for the animation
+        const previousEmail = data.data.previousEmail;
+        const newEmail = data.data.newEmail;
+        
+        // Show success animation
+        setShowEmailChangeSuccess(true);
+        
+        // Hide animation after a delay
+        setTimeout(() => {
+          setShowEmailChangeSuccess(false);
+        }, 3000);
         
         // Trigger a refresh of user data
         fetchUserData()
@@ -352,14 +362,6 @@ export default function SettingsPage() {
         throw new Error(data.message || 'Failed to update password');
       }
       
-      // Show a more prominent success message
-      toast({
-        title: "Success!",
-        description: "Your password has been updated successfully. Please use your new password next time you log in.",
-        variant: "default",
-        duration: 5000, // Show for a longer time
-      });
-      
       // Close the dialog
       setShowPasswordDialog(false);
       
@@ -369,6 +371,14 @@ export default function SettingsPage() {
         newPassword: "",
         confirmPassword: "",
       });
+      
+      // Show success animation
+      setShowPasswordChangeSuccess(true);
+      
+      // Hide animation after a delay
+      setTimeout(() => {
+        setShowPasswordChangeSuccess(false);
+      }, 3000);
     } catch (err) {
       console.error('Password change error:', err);
       toast({
@@ -1440,6 +1450,114 @@ export default function SettingsPage() {
                   Redirecting to home page...
                 </div>
               </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Email Change Success Animation */}
+      {showEmailChangeSuccess && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="max-w-md w-full bg-card p-6 rounded-lg shadow-lg text-center"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 260, 
+                damping: 20,
+                delay: 0.1
+              }}
+              className="w-24 h-24 bg-blue-100 rounded-full mx-auto mb-6 flex items-center justify-center"
+            >
+              <MailIcon className="h-12 w-12 text-blue-600" />
+            </motion.div>
+            
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <h2 className="text-2xl font-bold mb-2">Email Address Updated!</h2>
+              <p className="text-muted-foreground mb-1">
+                Your email address has been successfully changed.
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Notifications have been sent to both your previous and new email addresses.
+              </p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Button
+                variant="outline"
+                className="mt-6"
+                onClick={() => setShowEmailChangeSuccess(false)}
+              >
+                Close
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Password Change Success Animation */}
+      {showPasswordChangeSuccess && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="max-w-md w-full bg-card p-6 rounded-lg shadow-lg text-center"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 260, 
+                damping: 20,
+                delay: 0.1
+              }}
+              className="w-24 h-24 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center"
+            >
+              <CheckIcon className="h-12 w-12 text-green-600" />
+            </motion.div>
+            
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <h2 className="text-2xl font-bold mb-2">Password Updated!</h2>
+              <p className="text-muted-foreground mb-1">
+                Your password has been successfully changed.
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Please use your new password next time you login.
+              </p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Button
+                variant="outline"
+                className="mt-6"
+                onClick={() => setShowPasswordChangeSuccess(false)}
+              >
+                Close
+              </Button>
             </motion.div>
           </motion.div>
         </div>
