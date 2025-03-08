@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { createToken, setTokenCookie } from '@/lib/auth';
+import { sendWelcomeEmail } from '@/lib/email-service';
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,6 +49,11 @@ export async function POST(req: NextRequest) {
     
     // Set cookie
     setTokenCookie(token);
+    
+    // Send welcome email (don't await to avoid delaying response)
+    sendWelcomeEmail({ email, name }).catch(error => {
+      console.error('Error sending welcome email:', error);
+    });
     
     // Return user data (excluding password)
     return NextResponse.json({
