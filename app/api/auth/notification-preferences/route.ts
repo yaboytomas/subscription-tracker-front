@@ -34,7 +34,8 @@ export async function GET(req: NextRequest) {
       success: true,
       notificationPreferences: user.notificationPreferences || {
         paymentReminders: true,
-        reminderFrequency: '3days'
+        reminderFrequency: '3days',
+        monthlyReports: true
       }
     });
   } catch (error: any) {
@@ -63,7 +64,7 @@ export async function PUT(req: NextRequest) {
     }
     
     // Parse request body
-    const { paymentReminders, reminderFrequency } = await req.json();
+    const { paymentReminders, reminderFrequency, monthlyReports } = await req.json();
     
     // Basic validation
     if (paymentReminders === undefined || !reminderFrequency) {
@@ -87,7 +88,8 @@ export async function PUT(req: NextRequest) {
       { 
         notificationPreferences: {
           paymentReminders,
-          reminderFrequency
+          reminderFrequency,
+          monthlyReports: monthlyReports !== undefined ? monthlyReports : true
         }
       },
       { new: true, runValidators: true }

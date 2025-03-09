@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 export interface INotificationPreferences {
   paymentReminders: boolean; // Whether to send payment reminders
   reminderFrequency: 'daily' | 'weekly' | '3days'; // When to send reminders
+  monthlyReports: boolean; // Whether to send monthly spending reports
 }
 
 export interface IUser extends mongoose.Document {
@@ -61,6 +62,10 @@ const UserSchema = new mongoose.Schema<IUser>(
         type: String,
         enum: ['daily', 'weekly', '3days'],
         default: '3days',
+      },
+      monthlyReports: {
+        type: Boolean,
+        default: true,
       },
     },
   },

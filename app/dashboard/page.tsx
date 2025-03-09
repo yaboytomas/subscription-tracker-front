@@ -27,29 +27,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  ReferenceLine,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts"
-import { useTheme } from "next-themes"
-
-// Define colors for the charts
-const CHART_COLORS = [
-  "#8884d8", "#83a6ed", "#8dd1e1", "#82ca9d", "#a4de6c",
-  "#d0ed57", "#ffc658", "#ff8042", "#ff6b6b", "#bc5090"
-];
-
-// Month names for charts
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // Simplified animation variants
 const containerVariants = {
@@ -63,7 +40,6 @@ const containerVariants = {
 export default function DashboardPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const { theme } = useTheme()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<{ id: string; name: string; email: string } | null>(null)
@@ -72,12 +48,6 @@ export default function DashboardPage() {
   const [subscriptions, setSubscriptions] = useState<any[]>([])
   const [totalMonthlySpending, setTotalMonthlySpending] = useState(0)
   const [upcomingPayments, setUpcomingPayments] = useState<any[]>([])
-  const [spendingHistory, setSpendingHistory] = useState<any[]>([])
-  const [categoryBreakdown, setCategoryBreakdown] = useState<Record<string, number>>({})
-  
-  // Current month for reference line
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
   
   const refreshData = () => {
     setRefreshTrigger(prev => prev + 1)
@@ -197,85 +167,6 @@ export default function DashboardPage() {
     
     checkAuth()
   }, [router])
-  
-  // Custom tooltip for the line chart
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card border rounded-md p-2 shadow-sm">
-          <p className="text-sm font-medium">{`${label} ${payload[0].payload.year}`}</p>
-          <p className="text-sm">{formatCurrency(payload[0].value)}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Generate spending history data for the line chart
-  useEffect(() => {
-    if (subscriptions.length > 0) {
-      try {
-        // Generate data for all months of the current year
-        const data = [];
-        for (let i = 0; i < 12; i++) {
-          // For months in the past (up to current month)
-          const isPastMonth = i <= currentMonth;
-          
-          // Calculate spending for this month based on actual subscriptions
-          let monthlyTotal = 0;
-          
-          if (isPastMonth) {
-            // For past months, calculate based on subscriptions that would have been active
-            subscriptions.forEach(sub => {
-              try {
-                const startDate = new Date(sub.startDate);
-                // Check if subscription was active in this month of current year
-                if (startDate <= new Date(currentYear, i, 28)) {
-                  monthlyTotal += getMonthlyPrice(sub);
-                }
-              } catch (err) {
-                console.error("Error processing subscription:", err);
-                // Skip this subscription but continue processing others
-              }
-            });
-          } else {
-            // For future months, use current subscriptions
-            monthlyTotal = subscriptions.reduce((acc, sub) => {
-              try {
-                return acc + getMonthlyPrice(sub);
-              } catch (err) {
-                console.error("Error getting monthly price:", err);
-                return acc;
-              }
-            }, 0);
-          }
-          
-          data.push({
-            name: MONTHS[i],
-            month: i + 1, // 1-indexed month for sorting
-            year: currentYear,
-            amount: parseFloat(monthlyTotal.toFixed(2))
-          });
-        }
-        
-        setSpendingHistory(data);
-        
-        // Calculate category breakdown
-        const categories = subscriptions.reduce((acc: Record<string, number>, sub: any) => {
-          const category = sub.category || "Uncategorized";
-          const monthlyPrice = getMonthlyPrice(sub);
-          acc[category] = (acc[category] || 0) + monthlyPrice;
-          return acc;
-        }, {});
-        
-        setCategoryBreakdown(categories);
-        
-      } catch (err) {
-        console.error("Error generating spending history:", err);
-        setSpendingHistory([]);
-      }
-    }
-  }, [subscriptions, currentMonth, currentYear]);
   
   if (loading) {
     return (
@@ -496,165 +387,8 @@ export default function DashboardPage() {
           <CardContent className="pt-6">
             <TabsContent value="overview">
               <div className="space-y-6">
-                {/* Spending Line Chart - replacing SubscriptionStats */}
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold">Subscription Analytics ({currentYear})</h3>
-                      <p className="text-sm text-muted-foreground">Your subscription spending insights</p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => router.push('/dashboard/analytics')}
-                    >
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      View Detailed Analytics
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Line Chart */}
-                    <div className="bg-background rounded-md p-4 border h-64">
-                      <h4 className="text-sm font-medium mb-2">Spending Trends</h4>
-                      {spendingHistory.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="90%">
-                          {(() => {
-                            try {
-                              return (
-                                <LineChart
-                                  data={spendingHistory}
-                                  margin={{
-                                    top: 5,
-                                    right: 30,
-                                    left: 20,
-                                    bottom: 5,
-                                  }}
-                                >
-                                  <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#333' : '#eee'} />
-                                  <XAxis 
-                                    dataKey="name" 
-                                    tick={{ fontSize: 12 }} 
-                                    stroke={theme === 'dark' ? '#aaa' : '#666'} 
-                                  />
-                                  <YAxis 
-                                    tick={{ fontSize: 12 }}
-                                    stroke={theme === 'dark' ? '#aaa' : '#666'}
-                                    tickFormatter={(value) => `$${value}`}
-                                  />
-                                  <Tooltip content={<CustomTooltip />} />
-                                  <Line
-                                    type="monotone"
-                                    dataKey="amount"
-                                    stroke="#8884d8"
-                                    strokeWidth={2}
-                                    dot={{ r: 4 }}
-                                    activeDot={{ r: 8 }}
-                                  />
-                                  {/* Add reference line for current month */}
-                                  {currentMonth >= 0 && currentMonth < 12 && (
-                                    <ReferenceLine
-                                      x={MONTHS[currentMonth]}
-                                      stroke="#ff4081"
-                                      strokeWidth={2}
-                                      strokeDasharray="3 3"
-                                      label={{
-                                        value: "Current",
-                                        position: "insideTopRight",
-                                        fill: "#ff4081",
-                                        fontSize: 12
-                                      }}
-                                    />
-                                  )}
-                                </LineChart>
-                              );
-                            } catch (err) {
-                              console.error("Error rendering line chart:", err);
-                              return (
-                                <div className="flex items-center justify-center h-full">
-                                  <p className="text-destructive">Error rendering chart</p>
-                                </div>
-                              );
-                            }
-                          })()}
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <p className="text-muted-foreground">No trend data available</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Pie Chart */}
-                    <div className="bg-background rounded-md p-4 border h-64">
-                      <h4 className="text-sm font-medium mb-2">Category Distribution</h4>
-                      {Object.keys(categoryBreakdown).length > 0 ? (
-                        <ResponsiveContainer width="100%" height="90%">
-                          {(() => {
-                            try {
-                              // Format category data for the pie chart
-                              const categoryPieData = Object.entries(categoryBreakdown).map(([name, value], index) => ({
-                                name,
-                                value: parseFloat(value.toFixed(2)),
-                                color: CHART_COLORS[index % CHART_COLORS.length]
-                              }));
-                              
-                              return (
-                                <PieChart>
-                                  <Pie
-                                    data={categoryPieData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={2}
-                                    dataKey="value"
-                                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                                    labelLine={false}
-                                  >
-                                    {categoryPieData.map((entry, index) => (
-                                      <Cell 
-                                        key={`cell-${index}`} 
-                                        fill={entry.color} 
-                                        stroke={theme === 'dark' ? '#1a1a1a' : '#ffffff'} 
-                                        strokeWidth={2}
-                                      />
-                                    ))}
-                                  </Pie>
-                                  <Tooltip 
-                                    content={({ active, payload }) => {
-                                      if (active && payload && payload.length) {
-                                        const data = payload[0].payload;
-                                        return (
-                                          <div className="bg-card border rounded-md p-2 shadow-sm">
-                                            <p className="text-sm font-medium">{data.name}</p>
-                                            <p className="text-sm">{formatCurrency(data.value)}</p>
-                                          </div>
-                                        );
-                                      }
-                                      return null;
-                                    }}
-                                  />
-                                </PieChart>
-                              );
-                            } catch (err) {
-                              console.error("Error rendering pie chart:", err);
-                              return (
-                                <div className="flex items-center justify-center h-full">
-                                  <p className="text-destructive">Error rendering chart</p>
-                                </div>
-                              );
-                            }
-                          })()}
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <p className="text-muted-foreground">No category data available</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                {/* Subscription Stats */}
+                <SubscriptionStats refreshTrigger={refreshTrigger} />
                 
                 {/* Recent Subscriptions */}
                 <div className="mt-6">

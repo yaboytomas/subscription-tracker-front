@@ -43,7 +43,8 @@ import {
   Settings, 
   FileText, 
   FileSpreadsheet, 
-  Database
+  Database,
+  BarChart3
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { EmailHistory } from "@/components/email-history"
@@ -112,6 +113,7 @@ export default function SettingsPage() {
   const [notificationPreferences, setNotificationPreferences] = useState({
     paymentReminders: true,
     reminderFrequency: '3days',
+    monthlyReports: true,
   });
   const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
 
@@ -1304,7 +1306,7 @@ export default function SettingsPage() {
             <div className="p-6 space-y-6">
               <div>
                 <h3 className="font-medium text-sm text-muted-foreground mb-3">EMAIL NOTIFICATIONS</h3>
-                <div className="bg-card border border-border/60 rounded-lg overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                <div className="bg-card border border-border/60 rounded-lg overflow-hidden transition-all hover:shadow-md hover:border-primary/30 mb-4">
                   <div className="p-4 border-b border-border/60 bg-muted/30">
                     <div className="flex items-center gap-3">
                       <div className="bg-primary/10 p-2 rounded-full">
@@ -1368,6 +1370,48 @@ export default function SettingsPage() {
                       <p className="text-xs text-muted-foreground italic">
                         Choose when you'll receive payment reminders. We'll email you according to this schedule.
                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-card border border-border/60 rounded-lg overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                  <div className="p-4 border-b border-border/60 bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <BarChart3 className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Monthly Spending Reports</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Get insights on your subscription spending
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Receive monthly email reports with detailed analytics about your subscription spending, including category breakdowns and trends.
+                      </p>
+                      <Switch 
+                        id="monthly-reports" 
+                        checked={notificationPreferences.monthlyReports ?? true}
+                        onCheckedChange={(checked) => {
+                          setNotificationPreferences(prev => ({
+                            ...prev,
+                            monthlyReports: checked
+                          }));
+                          updateNotificationPreferences({
+                            ...notificationPreferences,
+                            monthlyReports: checked
+                          });
+                        }}
+                        disabled={isUpdatingNotifications}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    </div>
+                    <div className="mt-3 text-xs text-muted-foreground italic">
+                      Monthly reports are sent at the beginning of each month, summarizing your previous month's spending.
                     </div>
                   </div>
                 </div>

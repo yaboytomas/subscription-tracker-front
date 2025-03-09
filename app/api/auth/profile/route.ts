@@ -38,7 +38,8 @@ export async function GET(req: NextRequest) {
         bio: user.bio || '',
         notificationPreferences: user.notificationPreferences || {
           paymentReminders: true,
-          reminderFrequency: '3days'
+          reminderFrequency: '3days',
+          monthlyReports: true
         }
       },
     });
@@ -121,7 +122,8 @@ export async function PUT(req: NextRequest) {
         bio: updatedUser.bio || '',
         notificationPreferences: updatedUser.notificationPreferences || {
           paymentReminders: true,
-          reminderFrequency: '3days'
+          reminderFrequency: '3days',
+          monthlyReports: true
         }
       },
     });

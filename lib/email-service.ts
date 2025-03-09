@@ -295,4 +295,170 @@ export async function sendEmailChangeConfirmationToNewEmail(user: {
     console.error('Failed to send email change confirmation to new email:', error);
     return { success: false, error };
   }
+}
+
+/**
+ * Sends a monthly spending report with analytics
+ */
+export async function sendMonthlySpendingReport(
+  user: { email: string; name: string },
+  reportData: {
+    monthName: string;
+    year: number;
+    totalSpent: number;
+    previousMonthSpent: number;
+    categories: Array<{ name: string; amount: number; percentage: number }>;
+    topSubscriptions: Array<{ name: string; amount: number; category: string }>;
+    upcomingRenewals: Array<{ name: string; date: string; amount: number; daysUntil: number }>;
+  }
+) {
+  try {
+    console.log(`Attempting to send monthly spending report to ${user.email} for ${reportData.monthName} ${reportData.year}`);
+    
+    // During testing with free Resend account, always send to your verified email
+    const recipient = process.env.NODE_ENV === 'production' ? user.email : 'tomasszabo94@gmail.com';
+    
+    // Format the currency
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+      }).format(amount);
+    };
+    
+    // Calculate month-over-month change
+    const change = reportData.totalSpent - reportData.previousMonthSpent;
+    const percentChange = reportData.previousMonthSpent > 0 
+      ? ((change / reportData.previousMonthSpent) * 100).toFixed(1) 
+      : '0';
+    const changeDirection = change > 0 ? 'up' : change < 0 ? 'down' : 'unchanged';
+    const changeText = changeDirection === 'up' 
+      ? `increased by ${formatCurrency(Math.abs(change))} (${Math.abs(parseFloat(percentChange))}%)` 
+      : changeDirection === 'down'
+      ? `decreased by ${formatCurrency(Math.abs(change))} (${Math.abs(parseFloat(percentChange))}%)`
+      : 'remained the same';
+    
+    // Create the category breakdown
+    let categoryBreakdown = '';
+    for (const category of reportData.categories) {
+      categoryBreakdown += `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${category.name}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${formatCurrency(category.amount)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${category.percentage.toFixed(1)}%</td>
+        </tr>
+      `;
+    }
+    
+    // Create the top subscriptions section
+    let topSubscriptionsSection = '';
+    for (const sub of reportData.topSubscriptions) {
+      topSubscriptionsSection += `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${sub.name}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${formatCurrency(sub.amount)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${sub.category}</td>
+        </tr>
+      `;
+    }
+    
+    // Create the upcoming renewals section
+    let upcomingRenewalsSection = '';
+    for (const renewal of reportData.upcomingRenewals) {
+      upcomingRenewalsSection += `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${renewal.name}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${renewal.date}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${formatCurrency(renewal.amount)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eaeaea;">${renewal.daysUntil} days</td>
+        </tr>
+      `;
+    }
+
+    const data = await resend.emails.send({
+      from: 'Subscription Tracker <onboarding@resend.dev>',
+      to: recipient,
+      subject: `Your ${reportData.monthName} ${reportData.year} Spending Report`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #333; border-bottom: 2px solid #5c6ac4; padding-bottom: 10px;">Monthly Spending Report</h1>
+          
+          <p>Hello ${user.name},</p>
+          
+          <p>Here's your subscription spending report for <strong>${reportData.monthName} ${reportData.year}</strong>.</p>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0; border-left: 4px solid #5c6ac4;">
+            <h2 style="margin-top: 0; color: #333;">Monthly Overview</h2>
+            <p style="font-size: 24px; font-weight: bold; margin: 10px 0;">${formatCurrency(reportData.totalSpent)}</p>
+            <p>Your spending has ${changeText} compared to last month.</p>
+          </div>
+          
+          <h2 style="color: #333; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Category Breakdown</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f8f9fa;">
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Category</th>
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Amount</th>
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">% of Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${categoryBreakdown}
+            </tbody>
+          </table>
+          
+          <h2 style="color: #333; border-bottom: 1px solid #eaeaea; padding-bottom: 10px; margin-top: 30px;">Top Subscriptions</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f8f9fa;">
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Subscription</th>
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Amount</th>
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Category</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topSubscriptionsSection}
+            </tbody>
+          </table>
+          
+          <h2 style="color: #333; border-bottom: 1px solid #eaeaea; padding-bottom: 10px; margin-top: 30px;">Upcoming Renewals</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f8f9fa;">
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Subscription</th>
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Date</th>
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Amount</th>
+                <th style="text-align: left; padding: 10px; border-bottom: 2px solid #eaeaea;">Days Until</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${upcomingRenewalsSection}
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; font-size: 14px; color: #666;">
+            <p>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/analytics" style="color: #5c6ac4; text-decoration: none;">
+                View Detailed Analytics →
+              </a>
+            </p>
+            <p>
+              You're receiving this email because you subscribed to monthly spending reports.
+              <br>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings" style="color: #5c6ac4; text-decoration: none;">
+                Update your email preferences
+              </a>
+            </p>
+          </div>
+        </div>
+      `
+    });
+    
+    console.log(`Monthly spending report sent to ${user.email} for ${reportData.monthName} ${reportData.year}`);
+    return { success: true, data };
+  } catch (error) {
+    console.error(`Failed to send monthly spending report:`, error);
+    return { success: false, error };
+  }
 } 
