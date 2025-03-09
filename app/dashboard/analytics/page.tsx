@@ -657,8 +657,8 @@ export default function AnalyticsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <HoverCard>
                   <HoverCardTrigger asChild>
-                    <div className="cursor-pointer">
-                      <Card className="bg-muted/50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
+                    <div className="cursor-pointer h-full">
+                      <Card className="bg-muted/50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md h-full">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium flex items-center justify-between">
                             Highest Expense
@@ -755,19 +755,22 @@ export default function AnalyticsPage() {
 
                 <HoverCard>
                   <HoverCardTrigger asChild>
-                    <div className="cursor-pointer">
-                      <Card className="bg-muted/50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
+                    <div className="cursor-pointer h-full">
+                      <Card className="bg-muted/50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md h-full">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium">Subscription Frequency</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="space-y-2">
-                            {Object.entries(billingCycleBreakdown).map(([cycle, count], index) => (
-                              <div key={index} className="flex justify-between text-sm">
-                                <span>{cycle}</span>
-                                <span className="font-medium">{count} subscriptions</span>
-                              </div>
-                            ))}
+                          <div className="space-y-1">
+                            {Object.entries(billingCycleBreakdown)
+                              .sort(([, countA], [, countB]) => countB - countA)
+                              .map(([cycle, count], index) => (
+                                <div key={index} className="flex justify-between text-xs">
+                                  <span>{cycle}</span>
+                                  <span className="font-medium text-xs">{count} subscription{count !== 1 ? 's' : ''}</span>
+                                </div>
+                              ))
+                            }
                           </div>
                         </CardContent>
                       </Card>

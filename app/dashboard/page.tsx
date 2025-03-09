@@ -9,47 +9,161 @@ import { SubscriptionList } from "@/components/subscription-list"
 import { UpcomingReminders } from "@/components/upcoming-reminders"
 import { SubscriptionStats } from "@/components/subscription-stats"
 import { SubscriptionsSection } from "@/components/subscriptions-section"
-import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { 
+  BarChart3, 
+  CreditCard, 
+  CalendarClock, 
+  DollarSign, 
+  PlusCircle, 
+  TrendingUp, 
+  ArrowUpRight, 
+  Clock, 
+  Bell
+} from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  ReferenceLine,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts"
+import { useTheme } from "next-themes"
 
-const container = {
+// Define colors for the charts
+const CHART_COLORS = [
+  "#8884d8", "#83a6ed", "#8dd1e1", "#82ca9d", "#a4de6c",
+  "#d0ed57", "#ffc658", "#ff8042", "#ff6b6b", "#bc5090"
+];
+
+// Month names for charts
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Simplified animation variants
+const containerVariants = {
   hidden: { opacity: 0 },
-  show: {
+  visible: { 
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
+    transition: { duration: 0.3 }
   }
-}
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-}
-
-const hoverCard = {
-  hover: {
-    scale: 1.02,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 10
-    }
-  }
-}
+};
 
 export default function DashboardPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { theme } = useTheme()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<{ id: string; name: string; email: string } | null>(null)
   const [greeting, setGreeting] = useState("Hello")
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [subscriptions, setSubscriptions] = useState<any[]>([])
+  const [totalMonthlySpending, setTotalMonthlySpending] = useState(0)
+  const [upcomingPayments, setUpcomingPayments] = useState<any[]>([])
+  const [spendingHistory, setSpendingHistory] = useState<any[]>([])
+  const [categoryBreakdown, setCategoryBreakdown] = useState<Record<string, number>>({})
+  
+  // Current month for reference line
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
   
   const refreshData = () => {
     setRefreshTrigger(prev => prev + 1)
   }
+
+  // Calculate monthly price based on billing cycle
+  const getMonthlyPrice = (subscription: any): number => {
+    const price = parseFloat(subscription.price);
+    if (subscription.billingCycle === "Monthly") {
+      return price;
+    } else if (subscription.billingCycle === "Yearly") {
+      return price / 12;
+    } else if (subscription.billingCycle === "Weekly") {
+      return price * 4.33;
+    } else if (subscription.billingCycle === "Quarterly") {
+      return price / 3;
+    } else if (subscription.billingCycle === "Biweekly") {
+      return price * 2.17;
+    }
+    return price;
+  }
+
+  // Format currency
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  // Format date
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  };
+
+  // Calculate days until payment
+  const getDaysUntil = (dateString: string): number => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const diffTime = date.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+  
+  // Fetch subscription data
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        const response = await fetch('/api/subscriptions')
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch subscriptions')
+        }
+        
+        const data = await response.json()
+        
+        if (data.success) {
+          const subs = data.subscriptions || [];
+          setSubscriptions(subs);
+          
+          // Calculate monthly spending
+          const monthlyTotal = subs.reduce((total: number, sub: any) => {
+            return total + getMonthlyPrice(sub);
+          }, 0);
+          setTotalMonthlySpending(monthlyTotal);
+          
+          // Get upcoming payments
+          const upcoming = subs
+            .filter((sub: any) => getDaysUntil(sub.nextPayment) <= 30)
+            .sort((a: any, b: any) => new Date(a.nextPayment).getTime() - new Date(b.nextPayment).getTime());
+          setUpcomingPayments(upcoming);
+        }
+      } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+      }
+    };
+    
+    if (isAuthenticated) {
+      fetchSubscriptions();
+    }
+  }, [isAuthenticated, refreshTrigger]);
   
   useEffect(() => {
     // Check if user is authenticated
@@ -84,10 +198,97 @@ export default function DashboardPage() {
     checkAuth()
   }, [router])
   
+  // Custom tooltip for the line chart
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-card border rounded-md p-2 shadow-sm">
+          <p className="text-sm font-medium">{`${label} ${payload[0].payload.year}`}</p>
+          <p className="text-sm">{formatCurrency(payload[0].value)}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Generate spending history data for the line chart
+  useEffect(() => {
+    if (subscriptions.length > 0) {
+      try {
+        // Generate data for all months of the current year
+        const data = [];
+        for (let i = 0; i < 12; i++) {
+          // For months in the past (up to current month)
+          const isPastMonth = i <= currentMonth;
+          
+          // Calculate spending for this month based on actual subscriptions
+          let monthlyTotal = 0;
+          
+          if (isPastMonth) {
+            // For past months, calculate based on subscriptions that would have been active
+            subscriptions.forEach(sub => {
+              try {
+                const startDate = new Date(sub.startDate);
+                // Check if subscription was active in this month of current year
+                if (startDate <= new Date(currentYear, i, 28)) {
+                  monthlyTotal += getMonthlyPrice(sub);
+                }
+              } catch (err) {
+                console.error("Error processing subscription:", err);
+                // Skip this subscription but continue processing others
+              }
+            });
+          } else {
+            // For future months, use current subscriptions
+            monthlyTotal = subscriptions.reduce((acc, sub) => {
+              try {
+                return acc + getMonthlyPrice(sub);
+              } catch (err) {
+                console.error("Error getting monthly price:", err);
+                return acc;
+              }
+            }, 0);
+          }
+          
+          data.push({
+            name: MONTHS[i],
+            month: i + 1, // 1-indexed month for sorting
+            year: currentYear,
+            amount: parseFloat(monthlyTotal.toFixed(2))
+          });
+        }
+        
+        setSpendingHistory(data);
+        
+        // Calculate category breakdown
+        const categories = subscriptions.reduce((acc: Record<string, number>, sub: any) => {
+          const category = sub.category || "Uncategorized";
+          const monthlyPrice = getMonthlyPrice(sub);
+          acc[category] = (acc[category] || 0) + monthlyPrice;
+          return acc;
+        }, {});
+        
+        setCategoryBreakdown(categories);
+        
+      } catch (err) {
+        console.error("Error generating spending history:", err);
+        setSpendingHistory([]);
+      }
+    }
+  }, [subscriptions, currentMonth, currentYear]);
+  
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-lg">Loading...</p>
+      <div className="container max-w-7xl py-8 space-y-8">
+        <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <BarChart3 className="h-5 w-5 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          </div>
+          <p className="text-muted-foreground pl-12">Loading your subscription data...</p>
+        </div>
       </div>
     )
   }
@@ -97,47 +298,467 @@ export default function DashboardPage() {
   }
 
   return (
-    <motion.div 
-      className="flex flex-col gap-4 w-full"
-      initial="hidden"
-      animate="show"
-      variants={container}
-    >
-      <motion.div 
-        className="flex flex-col gap-2"
-        variants={item}
-      >
-        <h1 className="text-3xl font-bold tracking-tight">{greeting}, {user?.name?.split(' ')[0] || 'there'}!</h1>
-        <p className="text-sm text-muted-foreground">Welcome back to your subscription dashboard. Here's what's happening.</p>
-      </motion.div>
+    <div className="container max-w-7xl py-8 space-y-8">
+      {/* Header Section */}
+      <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <BarChart3 className="h-5 w-5 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">{greeting}, {user?.name?.split(' ')[0] || 'there'}!</h1>
+        </div>
+        <p className="text-muted-foreground pl-12">Welcome to your subscription dashboard. Here's an overview of your subscription services.</p>
+      </div>
 
-      <motion.div variants={item}>
-        <SubscriptionStats refreshTrigger={refreshTrigger} />
-      </motion.div>
+      {/* Key Metrics Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <div className="cursor-pointer">
+              <Card className="border border-border shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02]">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center justify-between">
+                    Monthly Spending
+                    <DollarSign className="h-4 w-4 text-primary" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatCurrency(totalMonthlySpending)}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatCurrency(totalMonthlySpending * 12)} per year
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent side="bottom" align="start" className="w-80 p-0">
+            <div className="p-4 border-b">
+              <div className="font-semibold mb-1">Monthly Spending Details</div>
+              <div className="text-sm text-muted-foreground">Breakdown of your monthly subscription costs</div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="text-xs text-muted-foreground">Monthly Total</div>
+                  <div className="font-medium">{formatCurrency(totalMonthlySpending)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Yearly Total</div>
+                  <div className="font-medium">{formatCurrency(totalMonthlySpending * 12)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Daily Average</div>
+                  <div className="font-medium">{formatCurrency(totalMonthlySpending / 30)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Weekly Average</div>
+                  <div className="font-medium">{formatCurrency(totalMonthlySpending / 4.33)}</div>
+                </div>
+              </div>
+              
+              <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-xs text-primary"
+                  onClick={() => router.push('/dashboard/analytics')}
+                >
+                  View detailed spending analytics →
+                </Button>
+              </div>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
 
-      <motion.div variants={item}>
-        <Tabs defaultValue="reminders" className="w-full">
-          <TabsList>
-            <TabsTrigger value="reminders">Upcoming Reminders</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-          </TabsList>
-          <TabsContent value="reminders">
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming Reminders</CardTitle>
-                <CardDescription>View and manage your upcoming payment reminders.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UpcomingReminders refreshTrigger={refreshTrigger} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="subscriptions">
-            <SubscriptionsSection refreshData={refreshData} />
-          </TabsContent>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <div className="cursor-pointer">
+              <Card className="border border-border shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02]">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center justify-between">
+                    Active Subscriptions
+                    <CreditCard className="h-4 w-4 text-primary" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{subscriptions.length}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatCurrency(totalMonthlySpending / (subscriptions.length || 1))} avg per service
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent side="bottom" align="start" className="w-80 p-0">
+            <div className="p-4 border-b">
+              <div className="font-semibold mb-1">Subscription Management</div>
+              <div className="text-sm text-muted-foreground">Quick access to your subscription services</div>
+            </div>
+            <div className="p-4 space-y-3">
+              <Button 
+                className="w-full mb-2"
+                onClick={() => router.push('/dashboard/subscriptions/new')}
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add New Subscription
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => router.push('/dashboard/subscriptions')}
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Manage Subscriptions
+              </Button>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <div className="cursor-pointer">
+              <Card className="border border-border shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02]">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center justify-between">
+                    Next Payment
+                    <CalendarClock className="h-4 w-4 text-primary" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {upcomingPayments.length > 0 ? (
+                    <>
+                      <div className="text-2xl font-bold">
+                        {formatDate(upcomingPayments[0]?.nextPayment)}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {upcomingPayments[0]?.name} - {formatCurrency(parseFloat(upcomingPayments[0]?.price))}
+                      </p>
+                    </>
+                  ) : (
+                    <div className="text-lg">No upcoming payments</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent side="bottom" align="start" className="w-80 p-0">
+            <div className="p-4 border-b">
+              <div className="font-semibold mb-1">Upcoming Payments</div>
+              <div className="text-sm text-muted-foreground">Your next scheduled subscription payments</div>
+            </div>
+            <div className="p-4 space-y-3">
+              {upcomingPayments.slice(0, 3).map((payment, index) => (
+                <div key={index} className="flex justify-between items-center py-1 border-b border-border last:border-0">
+                  <div>
+                    <div className="font-medium">{payment.name}</div>
+                    <div className="text-xs text-muted-foreground">In {getDaysUntil(payment.nextPayment)} days</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{formatCurrency(parseFloat(payment.price))}</div>
+                    <div className="text-xs text-muted-foreground">{formatDate(payment.nextPayment)}</div>
+                  </div>
+                </div>
+              ))}
+              
+              <Button 
+                variant="outline" 
+                className="w-full text-xs"
+                onClick={() => router.push('/dashboard/reminders')}
+              >
+                <Bell className="h-3 w-3 mr-2" />
+                View All Reminders
+              </Button>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+      </div>
+
+      {/* Main Content Tabs */}
+      <Card className="border border-border shadow-sm">
+        <Tabs defaultValue="overview" className="w-full">
+          <CardHeader className="pb-2 border-b">
+            <TabsList className="grid grid-cols-2 w-full md:w-auto">
+              <TabsTrigger value="overview">
+                <div className="flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Overview
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="activity">
+                <div className="flex items-center">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Recent Activity
+                </div>
+              </TabsTrigger>
+            </TabsList>
+          </CardHeader>
+          
+          <CardContent className="pt-6">
+            <TabsContent value="overview">
+              <div className="space-y-6">
+                {/* Spending Line Chart - replacing SubscriptionStats */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Subscription Analytics ({currentYear})</h3>
+                      <p className="text-sm text-muted-foreground">Your subscription spending insights</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push('/dashboard/analytics')}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      View Detailed Analytics
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Line Chart */}
+                    <div className="bg-background rounded-md p-4 border h-64">
+                      <h4 className="text-sm font-medium mb-2">Spending Trends</h4>
+                      {spendingHistory.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="90%">
+                          {(() => {
+                            try {
+                              return (
+                                <LineChart
+                                  data={spendingHistory}
+                                  margin={{
+                                    top: 5,
+                                    right: 30,
+                                    left: 20,
+                                    bottom: 5,
+                                  }}
+                                >
+                                  <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#333' : '#eee'} />
+                                  <XAxis 
+                                    dataKey="name" 
+                                    tick={{ fontSize: 12 }} 
+                                    stroke={theme === 'dark' ? '#aaa' : '#666'} 
+                                  />
+                                  <YAxis 
+                                    tick={{ fontSize: 12 }}
+                                    stroke={theme === 'dark' ? '#aaa' : '#666'}
+                                    tickFormatter={(value) => `$${value}`}
+                                  />
+                                  <Tooltip content={<CustomTooltip />} />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="amount"
+                                    stroke="#8884d8"
+                                    strokeWidth={2}
+                                    dot={{ r: 4 }}
+                                    activeDot={{ r: 8 }}
+                                  />
+                                  {/* Add reference line for current month */}
+                                  {currentMonth >= 0 && currentMonth < 12 && (
+                                    <ReferenceLine
+                                      x={MONTHS[currentMonth]}
+                                      stroke="#ff4081"
+                                      strokeWidth={2}
+                                      strokeDasharray="3 3"
+                                      label={{
+                                        value: "Current",
+                                        position: "insideTopRight",
+                                        fill: "#ff4081",
+                                        fontSize: 12
+                                      }}
+                                    />
+                                  )}
+                                </LineChart>
+                              );
+                            } catch (err) {
+                              console.error("Error rendering line chart:", err);
+                              return (
+                                <div className="flex items-center justify-center h-full">
+                                  <p className="text-destructive">Error rendering chart</p>
+                                </div>
+                              );
+                            }
+                          })()}
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-muted-foreground">No trend data available</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Pie Chart */}
+                    <div className="bg-background rounded-md p-4 border h-64">
+                      <h4 className="text-sm font-medium mb-2">Category Distribution</h4>
+                      {Object.keys(categoryBreakdown).length > 0 ? (
+                        <ResponsiveContainer width="100%" height="90%">
+                          {(() => {
+                            try {
+                              // Format category data for the pie chart
+                              const categoryPieData = Object.entries(categoryBreakdown).map(([name, value], index) => ({
+                                name,
+                                value: parseFloat(value.toFixed(2)),
+                                color: CHART_COLORS[index % CHART_COLORS.length]
+                              }));
+                              
+                              return (
+                                <PieChart>
+                                  <Pie
+                                    data={categoryPieData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={2}
+                                    dataKey="value"
+                                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                    labelLine={false}
+                                  >
+                                    {categoryPieData.map((entry, index) => (
+                                      <Cell 
+                                        key={`cell-${index}`} 
+                                        fill={entry.color} 
+                                        stroke={theme === 'dark' ? '#1a1a1a' : '#ffffff'} 
+                                        strokeWidth={2}
+                                      />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip 
+                                    content={({ active, payload }) => {
+                                      if (active && payload && payload.length) {
+                                        const data = payload[0].payload;
+                                        return (
+                                          <div className="bg-card border rounded-md p-2 shadow-sm">
+                                            <p className="text-sm font-medium">{data.name}</p>
+                                            <p className="text-sm">{formatCurrency(data.value)}</p>
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    }}
+                                  />
+                                </PieChart>
+                              );
+                            } catch (err) {
+                              console.error("Error rendering pie chart:", err);
+                              return (
+                                <div className="flex items-center justify-center h-full">
+                                  <p className="text-destructive">Error rendering chart</p>
+                                </div>
+                              );
+                            }
+                          })()}
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-muted-foreground">No category data available</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Recent Subscriptions */}
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Recent Subscriptions</h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push('/dashboard/subscriptions')}
+                    >
+                      View All
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {subscriptions.slice(0, 4).map((subscription, index) => (
+                      <Card key={index} className="bg-muted/50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md cursor-pointer" onClick={() => router.push(`/dashboard/subscriptions/${subscription._id}`)}>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="font-semibold">{subscription.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {subscription.billingCycle} - Next: {formatDate(subscription.nextPayment)}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium">{formatCurrency(parseFloat(subscription.price))}</div>
+                              <div className="text-xs text-muted-foreground">{subscription.category || "Uncategorized"}</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="activity">
+              <div className="space-y-6">
+                {/* Upcoming Reminders */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Upcoming Payments</h3>
+                  <div className="space-y-3">
+                    {upcomingPayments.slice(0, 5).map((payment, index) => (
+                      <div
+                        key={index} 
+                        className="bg-muted/50 rounded-md p-3 flex justify-between items-center hover:bg-muted/70 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/dashboard/subscriptions/${payment._id}`)}
+                      >
+                        <div>
+                          <div className="font-medium">{payment.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Due in {getDaysUntil(payment.nextPayment)} days
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">{formatCurrency(parseFloat(payment.price))}</div>
+                          <div className="text-xs text-muted-foreground">{formatDate(payment.nextPayment)}</div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {upcomingPayments.length === 0 && (
+                      <div className="text-center p-8 border border-dashed rounded-lg">
+                        <Clock className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-muted-foreground">No upcoming payments in the next 30 days</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <Button 
+                    variant="outline" 
+                    className="bg-card hover:bg-muted"
+                    onClick={() => router.push('/dashboard/subscriptions/new')}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add Subscription
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="bg-card hover:bg-muted"
+                    onClick={() => router.push('/dashboard/analytics')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    View Analytics
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="bg-card hover:bg-muted"
+                    onClick={() => router.push('/dashboard/reminders')}
+                  >
+                    <Bell className="h-4 w-4 mr-2" />
+                    Manage Reminders
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          </CardContent>
         </Tabs>
-      </motion.div>
-    </motion.div>
+      </Card>
+    </div>
   )
 }
 
