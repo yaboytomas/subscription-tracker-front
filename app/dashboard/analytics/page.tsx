@@ -655,47 +655,178 @@ export default function AnalyticsPage() {
 
               {/* Key insights */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="bg-muted/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Highest Expense</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {mostExpensiveSubscription ? (
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="font-semibold">{mostExpensiveSubscription.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {mostExpensiveSubscription.billingCycle} - {formatCurrency(parseFloat(mostExpensiveSubscription.price))}
-                          </div>
-                        </div>
-                        <div className="flex items-center text-primary">
-                          <ArrowUpRight className="h-4 w-4 mr-1" />
-                          <span className="text-sm font-medium">
-                            {((getMonthlyPrice(mostExpensiveSubscription) / monthlySpending) * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-sm">No subscription data</div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-muted/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Subscription Frequency</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {Object.entries(billingCycleBreakdown).map(([cycle, count], index) => (
-                        <div key={index} className="flex justify-between text-sm">
-                          <span>{cycle}</span>
-                          <span className="font-medium">{count} subscriptions</span>
-                        </div>
-                      ))}
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div className="cursor-pointer">
+                      <Card className="bg-muted/50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center justify-between">
+                            Highest Expense
+                            <ArrowUpRight className="h-4 w-4 text-primary" />
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {mostExpensiveSubscription ? (
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <div className="font-semibold">{mostExpensiveSubscription.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {mostExpensiveSubscription.billingCycle} - {formatCurrency(parseFloat(mostExpensiveSubscription.price))}
+                                </div>
+                              </div>
+                              <div className="flex items-center text-primary">
+                                <ArrowUpRight className="h-4 w-4 mr-1" />
+                                <span className="text-sm font-medium">
+                                  {((getMonthlyPrice(mostExpensiveSubscription) / monthlySpending) * 100).toFixed(0)}%
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-sm">No subscription data</div>
+                          )}
+                        </CardContent>
+                      </Card>
                     </div>
-                  </CardContent>
-                </Card>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80 p-0">
+                    <div className="p-4 border-b">
+                      <div className="font-semibold mb-1">Expense Analysis</div>
+                      <div className="text-sm text-muted-foreground">Your highest subscription costs and their impact</div>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      {mostExpensiveSubscription && (
+                        <>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm font-medium">{mostExpensiveSubscription.name}</span>
+                              <span className="text-sm font-bold">{formatCurrency(parseFloat(mostExpensiveSubscription.price))}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground flex justify-between">
+                              <span>Percentage of monthly budget</span>
+                              <span>{((getMonthlyPrice(mostExpensiveSubscription) / monthlySpending) * 100).toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                              <div 
+                                className="bg-primary h-full rounded-full" 
+                                style={{ 
+                                  width: `${(getMonthlyPrice(mostExpensiveSubscription) / monthlySpending) * 100}%` 
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 pt-1">
+                            <div>
+                              <div className="text-xs text-muted-foreground">Monthly Cost</div>
+                              <div className="font-medium">{formatCurrency(getMonthlyPrice(mostExpensiveSubscription))}</div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Yearly Cost</div>
+                              <div className="font-medium">
+                                {formatCurrency(mostExpensiveSubscription.billingCycle === "Yearly" 
+                                  ? parseFloat(mostExpensiveSubscription.price) 
+                                  : getMonthlyPrice(mostExpensiveSubscription) * 12)}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Next Payment</div>
+                              <div className="font-medium">{formatDate(mostExpensiveSubscription.nextPayment)}</div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Category</div>
+                              <div className="font-medium">{mostExpensiveSubscription.category || "Uncategorized"}</div>
+                            </div>
+                          </div>
+
+                          <div className="text-xs text-muted-foreground pt-2">
+                            <div className="font-medium text-sm mb-1">Cost-Saving Tip</div>
+                            <p>
+                              This subscription represents a significant portion of your monthly budget. 
+                              {mostExpensiveSubscription.billingCycle === "Monthly" 
+                                ? " Consider looking for annual payment options which often come with discounts."
+                                : " Review if all features are being utilized to ensure you're getting full value."}
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div className="cursor-pointer">
+                      <Card className="bg-muted/50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Subscription Frequency</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {Object.entries(billingCycleBreakdown).map(([cycle, count], index) => (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span>{cycle}</span>
+                                <span className="font-medium">{count} subscriptions</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80 p-0">
+                    <div className="p-4 border-b">
+                      <div className="font-semibold mb-1">Billing Cycle Distribution</div>
+                      <div className="text-sm text-muted-foreground">How your subscriptions are distributed across different billing periods</div>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      {/* Visualize billing cycle distribution as a chart */}
+                      <div className="space-y-3">
+                        {Object.entries(billingCycleBreakdown).map(([cycle, count], index) => (
+                          <div key={index} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span className="font-medium">{cycle}</span>
+                              <span className="font-medium">{count} ({((count / subscriptions.length) * 100).toFixed(0)}%)</span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                              <div 
+                                className="bg-primary h-full rounded-full" 
+                                style={{ 
+                                  width: `${(count / subscriptions.length) * 100}%`,
+                                  opacity: 0.7 + (0.3 * (index / Object.keys(billingCycleBreakdown).length))
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Billing cycle cost analysis */}
+                      <div className="space-y-2 pt-1">
+                        <div className="text-xs text-muted-foreground font-medium">Cost by Billing Cycle</div>
+                        {Object.entries(billingCycleBreakdown).map(([cycle, _], index) => {
+                          const cycleSubscriptions = subscriptions.filter(sub => sub.billingCycle === cycle);
+                          const monthlyCost = cycleSubscriptions.reduce((sum, sub) => sum + getMonthlyPrice(sub), 0);
+                          return (
+                            <div key={index} className="flex justify-between text-xs">
+                              <span>{cycle}</span>
+                              <span className="font-medium">{formatCurrency(monthlyCost)}/month</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Optimization tip */}
+                      <div className="text-xs text-muted-foreground pt-2 border-t">
+                        <div className="font-medium text-sm mt-2 mb-1">Billing Cycle Tips</div>
+                        <p>
+                          {billingCycleBreakdown["Monthly"] > billingCycleBreakdown["Yearly"] 
+                            ? "Consider converting some monthly subscriptions to yearly plans to potentially save 10-20% on total costs."
+                            : "You're doing well with annual subscriptions, which typically offer better value than monthly plans."}
+                        </p>
+                      </div>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
               </div>
             </div>
           )}
