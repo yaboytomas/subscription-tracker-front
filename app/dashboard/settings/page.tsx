@@ -30,12 +30,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Trash2, AlertCircle, Loader2, User, CheckIcon, MailIcon } from "lucide-react"
+import { 
+  Trash2, 
+  AlertCircle, 
+  Loader2, 
+  User, 
+  Check, 
+  Mail, 
+  Bell, 
+  CalendarClock, 
+  Info, 
+  Settings, 
+  FileText, 
+  FileSpreadsheet, 
+  Database
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 import { EmailHistory } from "@/components/email-history"
 import { saveAs } from 'file-saver';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { motion } from "framer-motion"
 
 // For profile refresh events
@@ -896,14 +908,17 @@ export default function SettingsPage() {
 
       <div className="grid gap-6">
         {/* Personal Information */}
-        <Card className="border-none shadow-none">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Personal Information</CardTitle>
+        <Card className="border border-border shadow-sm overflow-hidden">
+          <CardHeader className="pb-4 border-b bg-primary/5">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              <CardTitle className="text-xl">Personal Information</CardTitle>
+            </div>
             <CardDescription>Update your personal details and profile picture.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {isLoadingUser ? (
-              <div className="flex items-start gap-6">
+              <div className="p-6 flex items-start gap-6">
                 <Skeleton className="h-24 w-24 rounded-full" />
                 <div className="flex-1 space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -914,38 +929,123 @@ export default function SettingsPage() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="flex items-start gap-6">
-                  <div className="flex flex-col items-center gap-4">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src="/placeholder.svg?height=96&width=96" alt="User" />
-                      <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
-                    </Avatar>
+              <form onSubmit={handleSubmit} className="space-y-0">
+                {/* Profile Header - Avatar and Basic Info */}
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 flex flex-col md:flex-row items-center md:items-start gap-6">
+                  <div className="flex flex-col items-center gap-4 relative">
+                    <div className="relative group">
+                      <Avatar className="h-28 w-28 border-4 border-background shadow-md">
+                        <AvatarImage src="/placeholder.svg?height=96&width=96" alt="User" />
+                        <AvatarFallback className="text-3xl bg-primary/10">{userInitials}</AvatarFallback>
+                      </Avatar>
+                      <div className="absolute inset-0 bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="text-white text-xs">Change</div>
+                      </div>
+                    </div>
                     <div className="flex flex-col gap-2">
-                      <Button type="button" variant="outline" size="sm" className="w-32">
-                        Change Avatar
+                      <Button type="button" variant="outline" size="sm" className="w-32 border-primary/20 text-xs transition-all hover:border-primary/40">
+                        Upload Image
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
-                        Remove
+                      <Button type="button" variant="ghost" size="sm" className="text-muted-foreground text-xs hover:text-destructive">
+                        Remove Photo
                       </Button>
                     </div>
                   </div>
-                  <div className="flex-1 space-y-4">
-                    <div className="grid gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" name="name" value={formData.name} onChange={handleChange} />
+                  <div className="flex-1 space-y-1 w-full">
+                    <h3 className="font-medium text-sm text-muted-foreground">PROFILE DETAILS</h3>
+                    <h2 className="text-2xl font-bold">{formData.name || 'Your Name'}</h2>
+                    <p className="text-muted-foreground italic text-sm">{formData.bio || 'No bio added yet...'}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="bg-primary/10 rounded-full py-0.5 px-2 text-xs text-primary">
+                        Member
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea id="bio" name="bio" rows={3} value={formData.bio} onChange={handleChange} />
+                      <div className="text-xs text-muted-foreground">
+                        Joined {formatDate(new Date())}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Saving..." : "Save Changes"}
+                
+                {/* Profile Form */}
+                <div className="p-6 space-y-6">
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="font-medium text-sm">
+                        Full Name
+                      </Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="name" 
+                          name="name" 
+                          value={formData.name} 
+                          onChange={handleChange}
+                          className="border-primary/20 focus:ring-primary pl-10 transition-all" 
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        This is the name displayed on your profile and emails.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="font-medium text-sm">
+                        Email Address
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="email" 
+                          name="email" 
+                          type="email"
+                          value={formData.email} 
+                          disabled
+                          className="border-primary/20 bg-muted/50 pl-10" 
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        To change your email address, use the Account Management section.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="bio" className="font-medium text-sm">
+                      Bio
+                    </Label>
+                    <Textarea 
+                      id="bio" 
+                      name="bio" 
+                      rows={3} 
+                      value={formData.bio} 
+                      onChange={handleChange}
+                      className="border-primary/20 focus:ring-primary resize-none transition-all" 
+                      placeholder="Tell us a little about yourself"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      A brief description about yourself. This will be visible on your profile.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-muted/30 p-4 flex justify-end border-t">
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="bg-primary hover:bg-primary/90 transition-colors"
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        <Check className="mr-2 h-4 w-4" />
+                        Save Changes
+                      </span>
+                    )}
                   </Button>
                 </div>
               </form>
@@ -953,141 +1053,354 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Separator />
-
         {/* Account Management */}
-        <Card className="border-none shadow-none">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Account Management</CardTitle>
+        <Card className="border border-border shadow-sm overflow-hidden">
+          <CardHeader className="pb-4 border-b bg-primary/5">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              <CardTitle className="text-xl">Account Management</CardTitle>
+            </div>
             <CardDescription>Manage your account settings and security.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Button 
-                variant="outline" 
-                className="h-auto py-4 justify-start px-6"
-                onClick={() => setShowEmailDialog(true)}
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <span className="font-medium">Change Email</span>
-                  <span className="text-sm text-muted-foreground">
-                    Current: {formData.email ? formData.email : "Loading..."}
-                  </span>
+          <CardContent className="p-0">
+            <div className="p-6 space-y-6">
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-3">ACCOUNT SETTINGS</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="bg-card border border-border/60 rounded-lg overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                    <div className="p-4 border-b border-border/60 bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <Mail className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">Email Address</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {formData.email ? formData.email : "Loading..."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Change the email address associated with your account. Notifications will be sent to both addresses.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="w-full border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors"
+                        onClick={() => setShowEmailDialog(true)}
+                      >
+                        Change Email
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border/60 rounded-lg overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                    <div className="p-4 border-b border-border/60 bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <Settings className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">Password</h3>
+                          <p className="text-xs text-muted-foreground">
+                            Last updated: {formatDate(new Date())}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Update your password regularly to keep your account secure. Use a strong, unique password.
+                      </p>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors"
+                        onClick={() => setShowPasswordDialog(true)}
+                      >
+                        Change Password
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-auto py-4 justify-start px-6"
-                onClick={() => setShowPasswordDialog(true)}
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <span className="font-medium">Change Password</span>
-                  <span className="text-sm text-muted-foreground">Update your password</span>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-3">DANGER ZONE</h3>
+                <div className="bg-destructive/5 border border-destructive/20 rounded-lg overflow-hidden">
+                  <div className="p-4 border-b border-destructive/10 bg-destructive/10">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-destructive/20 p-2 rounded-full">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-destructive">Delete Account</h3>
+                        <p className="text-xs text-muted-foreground">
+                          This action cannot be undone
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Permanently delete your account and all associated data. Once deleted, your information cannot be recovered.
+                    </p>
+                    <div className="flex justify-end">
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        className="bg-destructive/90 hover:bg-destructive transition-colors"
+                        onClick={() => setShowDeleteDialog(true)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Account
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </Button>
-            </div>
-            <div className="flex justify-end pt-2">
-              <Button 
-                variant="destructive" 
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                Delete Account
-              </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Separator />
-
         {/* Email History - Only show if user data is loaded */}
         {!isLoadingUser && (
-          <div className="mb-8">
+          <div className="mb-2">
             <EmailHistory userId={formData.id || ""} />
           </div>
         )}
 
         {/* Data & Privacy */}
-        <Card className="border-none shadow-none">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Data & Privacy</CardTitle>
+        <Card className="border border-border shadow-sm overflow-hidden">
+          <CardHeader className="pb-4 border-b bg-primary/5">
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-primary" />
+              <CardTitle className="text-xl">Data & Privacy</CardTitle>
+            </div>
             <CardDescription>Manage your data and privacy settings.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Button
-                variant="outline"
-                className="h-auto py-4 justify-start px-6"
-                onClick={handleExportCSV}
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <span className="font-medium">Export CSV</span>
-                  <span className="text-sm text-muted-foreground">Download your data</span>
+          <CardContent className="p-0">
+            <div className="p-6 space-y-6">
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-3">EXPORT OPTIONS</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="bg-card border border-border/60 rounded-lg overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                    <div className="p-4 border-b border-border/60 bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <FileSpreadsheet className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">CSV Export</h3>
+                          <p className="text-xs text-muted-foreground">
+                            Export your data in CSV format
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Download all your subscription data in CSV format for use in spreadsheet applications.
+                      </p>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors"
+                        onClick={handleExportCSV}
+                      >
+                        <FileSpreadsheet className="mr-2 h-4 w-4" />
+                        Export CSV
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border/60 rounded-lg overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                    <div className="p-4 border-b border-border/60 bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <FileText className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">PDF Report</h3>
+                          <p className="text-xs text-muted-foreground">
+                            Generate a PDF report
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Create a formatted PDF report with your subscription details and spending overview.
+                      </p>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors"
+                        onClick={handleExportPDF}
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        Export PDF
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-4 justify-start px-6"
-                onClick={handleExportPDF}
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <span className="font-medium">Export PDF</span>
-                  <span className="text-sm text-muted-foreground">Download report</span>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-3">DATA MANAGEMENT</h3>
+                <div className="bg-destructive/5 border border-destructive/20 rounded-lg overflow-hidden">
+                  <div className="p-4 border-b border-destructive/10 bg-destructive/10">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-destructive/20 p-2 rounded-full">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-destructive">Delete All Subscriptions</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Remove all your subscriptions
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Delete all subscription data from your account. Your subscriptions will be archived but no longer visible in your dashboard.
+                    </p>
+                    <div className="flex justify-end">
+                      <Button 
+                        variant="destructive"
+                        size="sm"
+                        className="bg-destructive/90 hover:bg-destructive transition-colors"
+                        onClick={() => setIsDeleteSubscriptionsDialogOpen(true)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete All Subscriptions
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </Button>
-            </div>
-            <div className="flex justify-end pt-2">
-              <Button 
-                variant="destructive"
-                onClick={() => setIsDeleteSubscriptionsDialogOpen(true)}
-              >
-                Delete All Subscription Data
-              </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Separator />
-
         {/* Notification Settings */}
-        <Card className="border-none shadow-none">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Notification Settings</CardTitle>
-            <CardDescription>Configure your notification preferences.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="renewal-reminders" className="text-base">Renewal Reminders</Label>
-                <p className="text-sm text-muted-foreground">
-                  Get notified before subscriptions renew
-                </p>
-              </div>
-              <Switch 
-                id="renewal-reminders" 
-                checked={notificationPreferences.paymentReminders}
-                onCheckedChange={handleNotificationChange}
-                disabled={isUpdatingNotifications}
-              />
+        <Card className="border border-border shadow-sm overflow-hidden">
+          <CardHeader className="pb-4 border-b bg-primary/5">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              <CardTitle className="text-xl">Notification Settings</CardTitle>
             </div>
-            <div className="space-y-2">
-              <Label>Reminder Frequency</Label>
-              <Select 
-                value={notificationPreferences.reminderFrequency}
-                onValueChange={handleFrequencyChange}
-                disabled={!notificationPreferences.paymentReminders || isUpdatingNotifications}
-              >
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Select reminder frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="3days">3 Days Before</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Choose when you'll receive payment reminders for your subscriptions
-              </p>
+            <CardDescription>Configure how and when you receive notifications about your subscriptions.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="p-6 space-y-6">
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-3">EMAIL NOTIFICATIONS</h3>
+                <div className="bg-card border border-border/60 rounded-lg overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                  <div className="p-4 border-b border-border/60 bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <CalendarClock className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Renewal Reminders</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Get notified before your subscriptions renew
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-sm text-muted-foreground">
+                        Receive email notifications before your subscriptions are charged so you're never caught by surprise.
+                      </p>
+                      <Switch 
+                        id="renewal-reminders" 
+                        checked={notificationPreferences.paymentReminders}
+                        onCheckedChange={handleNotificationChange}
+                        disabled={isUpdatingNotifications}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    </div>
+                    
+                    <div className={`space-y-3 border-t pt-4 transition-all ${notificationPreferences.paymentReminders ? 'opacity-100' : 'opacity-50'}`}>
+                      <h4 className="text-sm font-medium">Reminder Timing</h4>
+                      <div className="bg-background border border-border/60 rounded-lg">
+                        <Select 
+                          value={notificationPreferences.reminderFrequency}
+                          onValueChange={handleFrequencyChange}
+                          disabled={!notificationPreferences.paymentReminders || isUpdatingNotifications}
+                        >
+                          <SelectTrigger className="w-full border-none focus:ring-primary">
+                            <div className="flex items-center gap-2">
+                              <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                              <SelectValue placeholder="Select reminder frequency" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily" className="flex items-center">
+                              <div className="flex items-center gap-2">
+                                <span>Daily (On the day)</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="3days">
+                              <div className="flex items-center gap-2">
+                                <span>3 Days Before</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="weekly">
+                              <div className="flex items-center gap-2">
+                                <span>Weekly (7 Days Before)</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="text-xs text-muted-foreground italic">
+                        Choose when you'll receive payment reminders. We'll email you according to this schedule.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-3">ADDITIONAL INFORMATION</h3>
+                <div className="bg-primary/5 border border-primary/20 rounded-lg overflow-hidden">
+                  <div className="p-4 border-b border-primary/10 bg-primary/10">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/20 p-2 rounded-full">
+                        <Info className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">About Notifications</h3>
+                        <p className="text-xs text-muted-foreground">
+                          How notifications work
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="space-y-3">
+                      <p className="text-sm">
+                        All notifications are sent via email to your registered email address. Make sure your email is up-to-date to receive important reminders.
+                      </p>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-primary mt-1" />
+                        <span>Notification emails come from <span className="font-medium">noreply@subscriptiontracker.com</span></span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <AlertCircle className="h-4 w-4 text-primary mt-1" />
+                        <span>If you're not receiving notifications, please check your spam folder and add our email to your safe senders list.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -1373,19 +1686,15 @@ export default function SettingsPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-6"
+              transition={{ delay: 0.6 }}
             >
-              <div className="relative pt-1">
-                <div className="overflow-hidden h-2 text-xs flex rounded bg-red-200">
-                  <motion.div
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 1.5 }}
-                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"
-                  ></motion.div>
-                </div>
-              </div>
+              <Button
+                variant="outline"
+                className="mt-6"
+                onClick={() => setShowDeleteSuccess(false)}
+              >
+                Close
+              </Button>
             </motion.div>
           </motion.div>
         </div>
@@ -1476,7 +1785,7 @@ export default function SettingsPage() {
               }}
               className="w-24 h-24 bg-blue-100 rounded-full mx-auto mb-6 flex items-center justify-center"
             >
-              <MailIcon className="h-12 w-12 text-blue-600" />
+              <Mail className="h-12 w-12 text-blue-600" />
             </motion.div>
             
             <motion.div
@@ -1530,7 +1839,7 @@ export default function SettingsPage() {
               }}
               className="w-24 h-24 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center"
             >
-              <CheckIcon className="h-12 w-12 text-green-600" />
+              <Check className="h-12 w-12 text-green-600" />
             </motion.div>
             
             <motion.div
