@@ -900,13 +900,18 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container max-w-5xl py-6 space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences.</p>
+    <div className="container max-w-5xl py-8 space-y-8">
+      <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Settings className="h-5 w-5 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        </div>
+        <p className="text-muted-foreground pl-12">Manage your account settings and preferences.</p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-8">
         {/* Personal Information */}
         <Card className="border border-border shadow-sm overflow-hidden">
           <CardHeader className="pb-4 border-b bg-primary/5">
