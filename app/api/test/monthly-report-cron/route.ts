@@ -39,19 +39,10 @@ function formatDate(dateString: string): string {
 
 export async function GET(req: NextRequest) {
   try {
-    // Check for authorization with a secret token for cron jobs
-    const authHeader = req.headers.get('authorization');
-    const cronToken = process.env.CRON_SECRET_TOKEN || 'your-default-cron-secret';
+    // For testing, we'll accept an email parameter to override and send to a specific user
+    const testEmail = req.nextUrl.searchParams.get('email');
     
-    if (authHeader !== `Bearer ${cronToken}`) {
-      console.warn('Unauthorized access attempt to monthly reports cron job');
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    
-    console.log('Starting monthly spending report generation...');
+    console.log('Starting test monthly spending report generation...');
     
     // Connect to the database
     try {
@@ -60,20 +51,32 @@ export async function GET(req: NextRequest) {
     } catch (dbError) {
       console.error('Database connection error:', dbError);
       return NextResponse.json(
-        { success: false, error: 'Database connection failed' },
+        { success: false, error: 'Database connection failed', details: dbError instanceof Error ? dbError.message : 'Unknown error' },
         { status: 500 }
       );
     }
     
-    // Get all users with monthly reports enabled
+    // Get users - either a specific test user or all users with monthly reports enabled
     let users;
     try {
-      users = await User.find({ 'notificationPreferences.monthlyReports': true });
-      console.log(`Found ${users.length} users with monthly reports enabled`);
+      if (testEmail) {
+        users = await User.find({ email: testEmail });
+        console.log(`Testing with specific user: ${testEmail}`);
+      } else {
+        users = await User.find({ 'notificationPreferences.monthlyReports': true });
+        console.log(`Found ${users.length} users with monthly reports enabled`);
+      }
+      
+      if (users.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'No users found with the specified criteria' },
+          { status: 404 }
+        );
+      }
     } catch (userError) {
       console.error('Error fetching users:', userError);
       return NextResponse.json(
-        { success: false, error: 'Failed to fetch users' },
+        { success: false, error: 'Failed to fetch users', details: userError instanceof Error ? userError.message : 'Unknown error' },
         { status: 500 }
       );
     }
@@ -91,22 +94,25 @@ export async function GET(req: NextRequest) {
         console.log(`Processing user: ${user.email}`);
         
         // Get user's subscriptions
-        const subscriptions = await Subscription.find({ user: user._id });
+        let subscriptions;
+        try {
+          subscriptions = await Subscription.find({ user: user._id });
+          console.log(`Found ${subscriptions.length} subscriptions for ${user.email}`);
+        } catch (subError) {
+          console.error(`Error fetching subscriptions for user ${user.email}:`, subError);
+          errors++;
+          continue;
+        }
         
         if (subscriptions.length === 0) {
           console.log(`No subscriptions found for user ${user.email}`);
           continue;
         }
         
-        console.log(`Found ${subscriptions.length} subscriptions for ${user.email}`);
-        
         // Calculate current month's spending
         const totalSpent = subscriptions.reduce((total, sub) => total + getMonthlyPrice(sub), 0);
         
-        // For previous month, we can either:
-        // 1. Calculate based on actual historical data (if you have it)
-        // 2. Use a simulated value for demonstration
-        // Here we'll use a simulated value as a placeholder
+        // For previous month, we're simulating a value
         const variation = Math.random() * 0.2 - 0.1; // Between -10% and +10%
         const previousMonthSpent = totalSpent * (1 + variation);
         
@@ -164,6 +170,13 @@ export async function GET(req: NextRequest) {
           upcomingRenewals: upcomingRenewals
         };
         
+        // Calculate change text for the response
+        const changeAmount = totalSpent - previousMonthSpent;
+        const changePercent = (changeAmount / previousMonthSpent) * 100;
+        const changeText = changeAmount >= 0 
+          ? `increased by $${changeAmount.toFixed(2)} (${changePercent.toFixed(1)}%)` 
+          : `decreased by $${Math.abs(changeAmount).toFixed(2)} (${Math.abs(changePercent).toFixed(1)}%)`;
+        
         // Send the monthly report
         await sendMonthlySpendingReport(
           { email: user.email, name: user.name },
@@ -180,12 +193,16 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: `Monthly spending reports generated successfully. Sent ${emailsSent} emails. Errors: ${errors}.`,
-      emailsSent,
-      errors
+      message: `Monthly spending reports test complete. Sent ${emailsSent} emails. Errors: ${errors}.`,
+      details: {
+        totalUsers: users.length,
+        emailsSent,
+        errors,
+        testEmail: testEmail || 'none'
+      }
     });
   } catch (error) {
-    console.error('Monthly spending report generation failed:', error);
+    console.error('Monthly spending report test failed:', error);
     return NextResponse.json(
       { 
         success: false, 
