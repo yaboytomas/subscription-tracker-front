@@ -204,10 +204,10 @@ const SignupPage = () => {
               <Input
                 id="name"
                 name="name"
-                placeholder="John Doe"
-                required
+                placeholder=""
                 value={formData.name}
                 onChange={handleChange}
+                required
                 className={formErrors.name ? "border-red-500" : ""}
               />
               {formErrors.name && (
@@ -220,10 +220,10 @@ const SignupPage = () => {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="john@example.com"
-                required
+                placeholder=""
                 value={formData.email}
                 onChange={handleChange}
+                required
                 className={formErrors.email ? "border-red-500" : ""}
               />
               {formErrors.email && (

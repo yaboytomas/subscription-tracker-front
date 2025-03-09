@@ -15,9 +15,9 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const [formData, setFormData] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    bio: "Software engineer and subscription enthusiast.",
+    name: "",
+    email: "",
+    bio: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",

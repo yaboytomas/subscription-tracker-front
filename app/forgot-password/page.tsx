@@ -123,11 +123,13 @@ const ForgotPasswordPage = () => {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder=""
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className={result && !result.success ? "border-red-500" : ""}
                   />
                 </div>
                 

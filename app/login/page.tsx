@@ -234,7 +234,7 @@ const LoginPage = () => {
                 id="email" 
                 name="email"
                 type="email" 
-                placeholder="m@example.com" 
+                placeholder="" 
                 required 
                 value={formData.email}
                 onChange={handleChange}

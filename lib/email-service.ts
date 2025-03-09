@@ -231,7 +231,7 @@ export async function sendEmailChangeNotificationToOldEmail(user: {
         <p><strong>Did not make this change?</strong> If you did not authorize this change, please:</p>
         <ol>
           <li>Reset your password immediately by visiting <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/forgot-password">the password reset page</a></li>
-          <li>Contact our support team at <a href="mailto:support@example.com">support@example.com</a></li>
+          <li>Contact our support team at <a href="mailto:support@subscriptiontracker.com">support@subscriptiontracker.com</a></li>
         </ol>
         
         <p>For security reasons, this is the last message we'll send to this email address unless you change your email back.</p>
@@ -282,7 +282,7 @@ export async function sendEmailChangeConfirmationToNewEmail(user: {
         <p>If you did not make this change, please:</p>
         <ol>
           <li>Reset your password immediately by visiting <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/forgot-password">the password reset page</a></li>
-          <li>Contact our support team at <a href="mailto:support@example.com">support@example.com</a></li>
+          <li>Contact our support team at <a href="mailto:support@subscriptiontracker.com">support@subscriptiontracker.com</a></li>
         </ol>
         
         <p>Best regards,<br>The Subscription Tracker Team</p>

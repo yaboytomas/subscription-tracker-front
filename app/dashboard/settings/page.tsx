@@ -1117,7 +1117,7 @@ export default function SettingsPage() {
           <form onSubmit={handleEmailSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="currentEmail">Current Email</Label>
+                <Label htmlFor="currentEmail">Email</Label>
                 <Input
                   id="currentEmail"
                   value={formData.email}
@@ -1131,10 +1131,11 @@ export default function SettingsPage() {
                   id="newEmail"
                   name="newEmail"
                   type="email"
-                  placeholder="your.new.email@example.com"
+                  placeholder=""
+                  required
                   value={emailChangeData.newEmail}
                   onChange={handleEmailChange}
-                  required
+                  className={emailChangeError ? "border-red-500" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -1143,7 +1144,7 @@ export default function SettingsPage() {
                   id="reason"
                   name="reason"
                   type="text"
-                  placeholder="Why are you changing your email?"
+                  placeholder=""
                   value={emailChangeData.reason}
                   onChange={handleEmailChange}
                 />
@@ -1154,7 +1155,7 @@ export default function SettingsPage() {
                   id="emailChangePassword"
                   name="password"
                   type="password"
-                  placeholder="Enter your current password"
+                  placeholder=""
                   value={emailChangeData.password}
                   onChange={handleEmailChange}
                   required
@@ -1283,7 +1284,7 @@ export default function SettingsPage() {
                 e.preventDefault();
                 handleDeleteAccount();
               }}
-              className="bg-destructive hover:bg-destructive/90 text-white"
+              className="bg-destructive hover:bg-destructive/90 text-white !text-white font-medium"
               disabled={deleteConfirmText !== "delete my account" || isDeleting}
             >
               {isDeleting ? (
@@ -1317,7 +1318,7 @@ export default function SettingsPage() {
             <AlertDialogAction
               onClick={handleDeleteAllSubscriptions}
               disabled={isDeletingSubscriptions}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 text-white"
             >
               {isDeletingSubscriptions ? (
                 <span className="flex items-center">
