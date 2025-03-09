@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { CalendarClock, CreditCard, Home, LogOut, PlusCircle, Settings } from "lucide-react"
+import { CalendarClock, CreditCard, Home, LogOut, PlusCircle, Settings, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
@@ -14,6 +14,11 @@ const navItems = [
     title: "Dashboard",
     href: "/dashboard",
     icon: Home,
+  },
+  {
+    title: "Analytics",
+    href: "/dashboard/analytics",
+    icon: BarChart3,
   },
   {
     title: "Subscriptions",
