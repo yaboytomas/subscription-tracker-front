@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 // Only import basic components
 import { Button } from "@/components/ui/button"
-import { Bell } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Bell, Calendar } from "lucide-react"
 
 export default function RemindersPage() {
   const [activeTab, setActiveTab] = useState('upcoming')
@@ -181,29 +182,15 @@ export default function RemindersPage() {
 
   return (
     <div className="container max-w-5xl py-8 space-y-8">
-      {/* Header - Using only basic styling */}
-      <div className="p-6 border rounded-lg mb-8">
+      {/* Header - Using styling from subscriptions page */}
+      <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <Bell className="h-5 w-5" />
-          <h1 className="text-3xl font-bold">Reminders</h1>
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Bell className="h-5 w-5 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Reminders</h1>
         </div>
-        <p className="text-gray-500">Track your upcoming subscription payments and never miss a renewal.</p>
-      </div>
-
-      {/* Tab Buttons - Using the Button component */}
-      <div className="flex space-x-2">
-        <Button
-          variant={activeTab === 'upcoming' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('upcoming')}
-        >
-          Upcoming
-        </Button>
-        <Button
-          variant={activeTab === 'past' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('past')}
-        >
-          Past
-        </Button>
+        <p className="text-muted-foreground pl-12">Track your upcoming subscription payments and never miss a renewal.</p>
       </div>
 
       {/* Loading and error states */}
@@ -223,55 +210,87 @@ export default function RemindersPage() {
           </Button>
         </div>
       ) : (
-        /* Content */
-        <div className="border rounded-lg p-6">
-          {activeTab === 'upcoming' ? (
-            <div>
-              <h2 className="text-xl font-bold mb-4">Upcoming Reminders</h2>
-              {upcomingReminders.length > 0 ? (
-                upcomingReminders.map(reminder => (
-                  <div key={reminder.id} className="border p-4 rounded mb-2">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-semibold">{reminder.name}</p>
-                        <p className="text-sm text-gray-500">{reminder.date}</p>
-                      </div>
-                      <p className="font-semibold">${reminder.price.toFixed(2)}</p>
+        /* Content with Card styling from subscriptions page */
+        <Card className="border border-border shadow-sm overflow-hidden">
+          <CardHeader className="pb-4 border-b bg-primary/5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                <div>
+                  <CardTitle>Payment Reminders</CardTitle>
+                  <CardDescription>Track your past and upcoming subscription payments.</CardDescription>
+                </div>
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button
+                  variant={activeTab === 'upcoming' ? "default" : "outline"}
+                  onClick={() => setActiveTab('upcoming')}
+                  className={activeTab !== 'upcoming' ? "border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors" : ""}
+                >
+                  Upcoming
+                </Button>
+                <Button
+                  variant={activeTab === 'past' ? "default" : "outline"}
+                  onClick={() => setActiveTab('past')}
+                  className={activeTab !== 'past' ? "border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors" : ""}
+                >
+                  Past
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="pt-6 px-6 pb-6">
+              {activeTab === 'upcoming' ? (
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Upcoming Reminders</h2>
+                  {upcomingReminders.length > 0 ? (
+                    <div className="space-y-2">
+                      {upcomingReminders.map(reminder => (
+                        <div key={reminder.id} className="border p-4 rounded-md flex justify-between items-center hover:bg-muted/50 transition-colors">
+                          <div>
+                            <p className="font-medium">{reminder.name}</p>
+                            <p className="text-sm text-muted-foreground">{reminder.date}</p>
+                          </div>
+                          <p className="font-medium">${reminder.price.toFixed(2)}</p>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))
+                  ) : (
+                    <div className="text-center p-8 border border-dashed rounded-lg">
+                      <p className="text-muted-foreground">No upcoming payments in the next 30 days.</p>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <div className="text-center p-8 border border-dashed rounded-lg">
-                  <p className="text-gray-500">No upcoming payments in the next 30 days.</p>
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Past Payments (Current Month)</h2>
+                  {currentMonthPayments.length > 0 ? (
+                    <div className="space-y-2">
+                      {currentMonthPayments.map(payment => (
+                        <div key={payment.id} className="border p-4 rounded-md flex justify-between items-center hover:bg-muted/50 transition-colors">
+                          <div>
+                            <p className="font-medium">{payment.name}</p>
+                            <p className="text-sm text-muted-foreground">{payment.date}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">${payment.price.toFixed(2)}</p>
+                            <p className="text-xs text-green-500">{payment.status}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center p-8 border border-dashed rounded-lg">
+                      <p className="text-muted-foreground">No payments recorded for the current month.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          ) : (
-            <div>
-              <h2 className="text-xl font-bold mb-4">Past Payments (Current Month)</h2>
-              {currentMonthPayments.length > 0 ? (
-                currentMonthPayments.map(payment => (
-                  <div key={payment.id} className="border p-4 rounded mb-2">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-semibold">{payment.name}</p>
-                        <p className="text-sm text-gray-500">{payment.date}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">${payment.price.toFixed(2)}</p>
-                        <p className="text-xs text-green-500">{payment.status}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center p-8 border border-dashed rounded-lg">
-                  <p className="text-gray-500">No payments recorded for the current month.</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )
