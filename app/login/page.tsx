@@ -210,7 +210,12 @@ const LoginPage = () => {
     <div className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <Link href="/" className="text-sm text-muted-foreground hover:underline">
+              Back to home
+            </Link>
+          </div>
           <CardDescription>Enter your email and password to login to your account</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
