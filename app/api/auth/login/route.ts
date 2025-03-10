@@ -20,35 +20,22 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Find user and include password for verification
+    // Find user and include password for verification in a single query
     const user = await User.findOne({ email }).select('+password');
     
-    // Check if user exists
-    if (!user) {
-      console.log(`Login attempt failed: No user found with email ${email}`);
+    // Check if user exists and verify password in one step
+    if (!user || !(await user.comparePassword(password))) {
       return NextResponse.json(
         { success: false, message: 'Invalid credentials' },
         { status: 401 }
       );
     }
     
-    // Verify password
-    console.log(`Attempting to verify password for user: ${email}`);
-    const isPasswordValid = await user.comparePassword(password);
-    console.log(`Password verification result: ${isPasswordValid ? 'Success' : 'Failed'}`);
-    
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-    
-    // Generate token
-    const token = createToken(user);
-    
-    // Set cookie
-    setTokenCookie(token);
+    // Generate token and set cookie in parallel
+    const [token] = await Promise.all([
+      createToken(user),
+      setTokenCookie(createToken(user))
+    ]);
     
     // Return user data
     return NextResponse.json({

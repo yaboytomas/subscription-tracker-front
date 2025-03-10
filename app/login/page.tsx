@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
@@ -27,50 +25,13 @@ const LoginPage = () => {
   const [serverError, setServerError] = useState("")
   const [userName, setUserName] = useState("")
 
-  // Check if user is already logged in on page load
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        console.log("Checking if user is already logged in...");
-        const response = await fetch('/api/auth/me', {
-          // Add cache: 'no-store' to prevent caching issues
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        });
-        
-        if (response.ok) {
-          // User is already logged in
-          const userData = await response.json();
-          console.log("User already logged in:", userData);
-          
-          if (userData.user && userData.user.name) {
-            setUserName(userData.user.name);
-          }
-          
-          // Show success animation and redirect
-          setIsSuccess(true);
-        } else {
-          console.log("User not logged in yet - showing login form");
-        }
-      } catch (error) {
-        // Not logged in or error checking - this is fine, continue to login form
-        console.log("Error checking authentication:", error);
-      }
-    };
-    
-    // Run the check immediately
-    checkAuthentication();
-  }, []);
-
   // Redirect after success animation completes
-  useEffect(() => {
+  React.useEffect(() => {
     let redirectTimer: NodeJS.Timeout;
     if (isSuccess) {
       redirectTimer = setTimeout(() => {
         router.push('/dashboard');
-      }, 2500); // Increased from 2000ms to 2500ms to ensure the animation is fully visible
+      }, 1500); // Reduced from 2500ms to 1500ms
     }
     return () => {
       if (redirectTimer) clearTimeout(redirectTimer);
@@ -131,12 +92,6 @@ const LoginPage = () => {
         throw new Error(data.message || 'Invalid credentials')
       }
       
-      // Show success message
-      toast({
-        title: "Success",
-        description: "You've been logged in successfully.",
-      })
-      
       // Get user name for the welcome message if available
       if (data.user && data.user.name) {
         setUserName(data.user.name);
@@ -165,13 +120,13 @@ const LoginPage = () => {
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.3 }}
           className="text-center"
         >
           <motion.div 
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
             className="flex justify-center mb-6"
           >
             <div className="rounded-full bg-primary/10 p-4">
@@ -181,7 +136,7 @@ const LoginPage = () => {
           <motion.h2 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
             className="text-3xl font-bold mb-2"
           >
             {userName ? `Welcome back, ${userName}!` : 'Welcome back!'}
@@ -189,7 +144,7 @@ const LoginPage = () => {
           <motion.p
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
             className="text-muted-foreground mb-8"
           >
             Login successful. Taking you to your dashboard...
@@ -197,7 +152,7 @@ const LoginPage = () => {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
           >
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
           </motion.div>
@@ -227,7 +182,7 @@ const LoginPage = () => {
               </Alert>
             </div>
           )}
-          <CardContent className="grid gap-4">
+          <CardContent>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input 

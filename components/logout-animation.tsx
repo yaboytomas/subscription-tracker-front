@@ -18,7 +18,13 @@ export function LogoutAnimation({ onAnimationComplete }: LogoutAnimationProps) {
       if (onAnimationComplete) {
         onAnimationComplete()
       } else {
-        router.push("/login")
+        // Clear any client-side storage before redirecting
+        if (typeof window !== "undefined") {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+        // Use window.location for a full page reload to ensure clean state
+        window.location.href = "/";
       }
     }, 2000)
 

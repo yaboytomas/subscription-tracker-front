@@ -174,7 +174,14 @@ export function UserNav() {
         description: "You have been logged out successfully.",
       })
       
-      // Don't redirect immediately - the animation component will handle it
+      // Clear any client-side storage
+      if (typeof window !== "undefined") {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+      
+      // Force a full page reload to ensure clean state
+      window.location.href = "/";
     } catch (error) {
       console.error('Logout error:', error);
       setShowLogoutAnimation(false)
