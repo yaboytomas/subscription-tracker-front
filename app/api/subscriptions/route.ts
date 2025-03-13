@@ -4,6 +4,9 @@ import Subscription from '@/models/Subscription';
 import { getCurrentUser } from '@/lib/auth';
 import { updateRegistrySubscriptions } from '@/lib/registry-utils';
 
+// Cache duration in seconds (1 minute for subscriptions since they change more frequently)
+const CACHE_DURATION = 60;
+
 // GET all subscriptions for the authenticated user
 export async function GET(req: NextRequest) {
   try {
@@ -23,10 +26,22 @@ export async function GET(req: NextRequest) {
     // Find all subscriptions for this user
     const subscriptions = await Subscription.find({ userId: user.id });
     
-    return NextResponse.json({
+    // Create response with data
+    const response = NextResponse.json({
       success: true,
       subscriptions,
     });
+
+    // Add caching headers
+    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=30`);
+    
+    // Create a unique ETag based on the user's ID and the latest subscription update
+    const latestUpdate = subscriptions.length > 0 
+      ? Math.max(...subscriptions.map(sub => sub.updatedAt.getTime()))
+      : Date.now();
+    response.headers.set('ETag', `"${user.id}-${latestUpdate}"`);
+
+    return response;
   } catch (error: any) {
     console.error('Error fetching subscriptions:', error);
     return NextResponse.json(

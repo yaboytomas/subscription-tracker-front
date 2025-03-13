@@ -6,79 +6,113 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bell, Calendar } from "lucide-react"
 
-export default function RemindersPage() {
-  const [activeTab, setActiveTab] = useState('upcoming')
-  const [currentMonthPayments, setCurrentMonthPayments] = useState([])
-  const [upcomingReminders, setUpcomingReminders] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+interface Subscription {
+  _id: string;
+  name: string;
+  price: string;
+  billingCycle: string;
+  nextPayment: string;
+  category: string;
+  startDate: string;
+  description: string;
+  userId: string;
+}
 
-  // Function to calculate next payment date based on start date and billing cycle
-  const calculateNextPaymentDate = (startDate, billingCycle) => {
-    const now = new Date()
-    const start = new Date(startDate)
-    let nextPaymentDate = new Date(start)
-    
-    // Ensure we're working with a valid date
-    if (isNaN(nextPaymentDate.getTime())) {
-      return now // Default to current date if invalid
-    }
+interface PastPayment {
+  id: string;
+  name: string;
+  price: number;
+  date: string;
+  status: string;
+}
 
-    // If the subscription start date is in the future, that's the next payment
-    if (nextPaymentDate > now) {
-      return nextPaymentDate
-    }
-    
-    // Calculate next payment based on billing cycle
-    switch (billingCycle.toLowerCase()) {
-      case 'weekly':
-        // Find the next weekly payment from start date that's in the future
-        while (nextPaymentDate <= now) {
-          nextPaymentDate.setDate(nextPaymentDate.getDate() + 7)
-        }
-        break
-        
-      case 'biweekly':
-        // Find the next biweekly payment from start date that's in the future
-        while (nextPaymentDate <= now) {
-          nextPaymentDate.setDate(nextPaymentDate.getDate() + 14)
-        }
-        break
-        
-      case 'monthly':
-        // Find the next monthly payment date
-        while (nextPaymentDate <= now) {
-          // Move to the same day in the next month
-          nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1)
-        }
-        break
-        
-      case 'quarterly':
-        // Find the next quarterly payment date
-        while (nextPaymentDate <= now) {
-          // Move to the same day 3 months later
-          nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 3)
-        }
-        break
-        
-      case 'yearly':
-        // Find the next yearly payment date
-        while (nextPaymentDate <= now) {
-          // Move to the same day in the next year
-          nextPaymentDate.setFullYear(nextPaymentDate.getFullYear() + 1)
-        }
-        break
-        
-      default:
-        // Default to monthly if billing cycle not recognized
-        while (nextPaymentDate <= now) {
-          nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1)
-        }
-        break
-    }
-    
+interface UpcomingPayment {
+  id: string;
+  name: string;
+  price: number;
+  date: string;
+}
+
+interface IntermediatePayment {
+  id: string;
+  name: string;
+  price: number;
+  date: Date;
+}
+
+// Function to calculate next payment date based on start date and billing cycle
+const calculateNextPaymentDate = (startDate: string, billingCycle: string): Date => {
+  const now = new Date()
+  const start = new Date(startDate)
+  let nextPaymentDate = new Date(start)
+  
+  // Ensure we're working with a valid date
+  if (isNaN(nextPaymentDate.getTime())) {
+    return now // Default to current date if invalid
+  }
+
+  // If the subscription start date is in the future, that's the next payment
+  if (nextPaymentDate > now) {
     return nextPaymentDate
   }
+  
+  // Calculate next payment based on billing cycle
+  switch (billingCycle.toLowerCase()) {
+    case 'weekly':
+      // Find the next weekly payment from start date that's in the future
+      while (nextPaymentDate <= now) {
+        nextPaymentDate.setDate(nextPaymentDate.getDate() + 7)
+      }
+      break
+      
+    case 'biweekly':
+      // Find the next biweekly payment from start date that's in the future
+      while (nextPaymentDate <= now) {
+        nextPaymentDate.setDate(nextPaymentDate.getDate() + 14)
+      }
+      break
+      
+    case 'monthly':
+      // Find the next monthly payment date
+      while (nextPaymentDate <= now) {
+        // Move to the same day in the next month
+        nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1)
+      }
+      break
+      
+    case 'quarterly':
+      // Find the next quarterly payment date
+      while (nextPaymentDate <= now) {
+        // Move to the same day 3 months later
+        nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 3)
+      }
+      break
+      
+    case 'yearly':
+      // Find the next yearly payment date
+      while (nextPaymentDate <= now) {
+        // Move to the same day in the next year
+        nextPaymentDate.setFullYear(nextPaymentDate.getFullYear() + 1)
+      }
+      break
+      
+    default:
+      // Default to monthly if billing cycle not recognized
+      while (nextPaymentDate <= now) {
+        nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1)
+      }
+      break
+  }
+  
+  return nextPaymentDate
+}
+
+export default function RemindersPage() {
+  const [activeTab, setActiveTab] = useState('upcoming')
+  const [currentMonthPayments, setCurrentMonthPayments] = useState<PastPayment[]>([])
+  const [upcomingReminders, setUpcomingReminders] = useState<UpcomingPayment[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Function to get real subscription data
   useEffect(() => {
@@ -105,73 +139,65 @@ export default function RemindersPage() {
           throw new Error(data.message || 'Failed to fetch subscriptions')
         }
         
-        const subscriptions = data.subscriptions || []
+        const subscriptions: Subscription[] = data.subscriptions || []
         
         // Calculate past payments for the current month
-        const pastPayments = subscriptions
+        const formattedPastPayments = subscriptions
           .map(subscription => {
-            // Create a date object for the subscription payment in current month
-            const paymentDate = new Date(subscription.startDate)
-            // Adjust to the current month
-            paymentDate.setFullYear(currentYear)
-            paymentDate.setMonth(currentMonth)
-            
-            // Only include if payment date is in the past (already paid this month)
-            if (paymentDate <= now && paymentDate.getMonth() === currentMonth) {
+            const paymentDate = new Date(subscription.startDate);
+            if (paymentDate.getMonth() === currentMonth && 
+                paymentDate.getFullYear() === currentYear &&
+                paymentDate <= now) {
               return {
                 id: subscription._id,
                 name: subscription.name,
-                price: parseFloat(subscription.price || 0),
-                date: paymentDate,
+                price: parseFloat(subscription.price || '0'),
+                date: paymentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
                 status: "Paid"
-              }
+              } as PastPayment;
             }
-            return null
+            return null;
           })
-          .filter(payment => payment !== null)
+          .filter((payment): payment is PastPayment => payment !== null)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
-        // Format dates for past payments
-        const formattedPastPayments = pastPayments.map(payment => ({
-          ...payment,
-          date: payment.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        }))
-        
-        setCurrentMonthPayments(formattedPastPayments)
+        setCurrentMonthPayments(formattedPastPayments);
         
         // Calculate upcoming payments
         const upcoming = subscriptions
           .map(subscription => {
-            // Get the next payment date
             const nextPaymentDate = calculateNextPaymentDate(
               subscription.startDate, 
               subscription.billingCycle
-            )
+            );
             
-            // Show payments in the next 30 days
-            const futureLimit = new Date(now)
-            futureLimit.setDate(now.getDate() + 30)
+            const today = new Date();
             
-            if (nextPaymentDate > now && nextPaymentDate <= futureLimit) {
+            if (nextPaymentDate.getMonth() === today.getMonth() && 
+                nextPaymentDate.getFullYear() === today.getFullYear() &&
+                nextPaymentDate >= today) {
               return {
                 id: subscription._id,
                 name: subscription.name,
-                price: parseFloat(subscription.price || 0),
+                price: parseFloat(subscription.price || '0'),
                 date: nextPaymentDate
-              }
+              } as IntermediatePayment;
             }
-            return null
+            return null;
           })
-          .filter(payment => payment !== null)
-          .sort((a, b) => a.date - b.date) // Sort by date (earliest first)
+          .filter((payment): payment is IntermediatePayment => payment !== null)
+          .sort((a, b) => a.date.getTime() - b.date.getTime())
           .map(payment => ({
-            ...payment,
+            id: payment.id,
+            name: payment.name,
+            price: payment.price,
             date: payment.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-          }))
+          }));
         
-        setUpcomingReminders(upcoming)
+        setUpcomingReminders(upcoming);
       } catch (err) {
         console.error('Error fetching subscriptions:', err)
-        setError(err.message || 'An error occurred while fetching your subscriptions')
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching your subscriptions')
       } finally {
         setIsLoading(false)
       }
@@ -259,7 +285,7 @@ export default function RemindersPage() {
                     </div>
                   ) : (
                     <div className="text-center p-8 border border-dashed rounded-lg">
-                      <p className="text-muted-foreground">No upcoming payments in the next 30 days.</p>
+                      <p className="text-muted-foreground">No upcoming payments this month.</p>
                     </div>
                   )}
                 </div>

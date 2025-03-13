@@ -3,6 +3,9 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { getCurrentUser } from '@/lib/auth';
 
+// Cache duration in seconds (5 minutes)
+const CACHE_DURATION = 300;
+
 // GET the current user's notification preferences
 export async function GET(req: NextRequest) {
   try {
@@ -29,8 +32,8 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    // Return the notification preferences or default values
-    return NextResponse.json({
+    // Create response with data
+    const response = NextResponse.json({
       success: true,
       notificationPreferences: user.notificationPreferences || {
         paymentReminders: true,
@@ -38,6 +41,12 @@ export async function GET(req: NextRequest) {
         monthlyReports: true
       }
     });
+
+    // Add caching headers
+    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=60`);
+    response.headers.set('ETag', `"${user._id}-${user.updatedAt.getTime()}"`);
+
+    return response;
   } catch (error: any) {
     console.error('Error fetching notification preferences:', error);
     return NextResponse.json(

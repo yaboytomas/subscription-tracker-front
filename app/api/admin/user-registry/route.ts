@@ -5,6 +5,9 @@ import UserRegistry from '@/models/UserRegistry';
 import { verifyToken } from '@/lib/auth';
 import User from '@/models/User';
 
+// Cache duration in seconds (2 minutes for admin data)
+const CACHE_DURATION = 120;
+
 // Admin role check - ensure this is a privileged operation
 const isAdmin = async (userId: string) => {
   try {
@@ -97,8 +100,8 @@ export async function GET(req: NextRequest) {
       .skip(skip)
       .limit(limit);
     
-    // Return data
-    return NextResponse.json({
+    // Create response with data
+    const response = NextResponse.json({
       success: true,
       data: {
         registries,
@@ -110,6 +113,18 @@ export async function GET(req: NextRequest) {
         }
       }
     });
+
+    // Add caching headers
+    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=30`);
+    
+    // Create a unique ETag based on the query parameters and latest registry update
+    const latestUpdate = registries.length > 0 
+      ? Math.max(...registries.map(reg => reg.lastUpdated.getTime()))
+      : Date.now();
+    const queryHash = JSON.stringify({ email, name, minSpend, maxSpend });
+    response.headers.set('ETag', `"${queryHash}-${latestUpdate}"`);
+
+    return response;
   } catch (error) {
     console.error('Error fetching user registries:', error);
     return NextResponse.json(

@@ -138,8 +138,14 @@ export function UpcomingReminders({ refreshTrigger = 0 }) {
         originalDate: sub.nextPayment
       };
     })
-    // Only include future payments
-    .filter(reminder => reminder.daysLeft >= 0)
+    // Only include payments for current month
+    .filter(reminder => {
+      const paymentDate = new Date(reminder.date);
+      const today = new Date();
+      return paymentDate.getMonth() === today.getMonth() && 
+             paymentDate.getFullYear() === today.getFullYear() &&
+             paymentDate >= today;
+    })
     // Show soonest payments first
     .sort((a, b) => a.daysLeft - b.daysLeft);
 

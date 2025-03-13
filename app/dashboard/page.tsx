@@ -121,7 +121,11 @@ export default function DashboardPage() {
           
           // Get upcoming payments
           const upcoming = subs
-            .filter((sub: any) => getDaysUntil(sub.nextPayment) <= 30)
+            .filter((sub: any) => {
+              const paymentDate = new Date(sub.nextPayment);
+              const today = new Date();
+              return paymentDate >= today;
+            })
             .sort((a: any, b: any) => new Date(a.nextPayment).getTime() - new Date(b.nextPayment).getTime());
           setUpcomingPayments(upcoming);
         }
@@ -319,10 +323,10 @@ export default function DashboardPage() {
                   {upcomingPayments.length > 0 ? (
                     <>
                       <div className="text-2xl font-bold">
-                        {formatDate(upcomingPayments[0]?.nextPayment)}
+                        {formatCurrency(parseFloat(upcomingPayments[0]?.price))}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {upcomingPayments[0]?.name} - {formatCurrency(parseFloat(upcomingPayments[0]?.price))}
+                        {formatDate(upcomingPayments[0]?.nextPayment)} - {upcomingPayments[0]?.name}
                       </p>
                     </>
                   ) : (
@@ -335,7 +339,7 @@ export default function DashboardPage() {
           <HoverCardContent side="bottom" align="start" className="w-80 p-0">
             <div className="p-4 border-b">
               <div className="font-semibold mb-1">Upcoming Payments</div>
-              <div className="text-sm text-muted-foreground">Your next scheduled subscription payments</div>
+              <div className="text-sm text-muted-foreground">Your subscription payments for this month</div>
             </div>
             <div className="p-4 space-y-3">
               {upcomingPayments.slice(0, 3).map((payment, index) => (
@@ -454,7 +458,7 @@ export default function DashboardPage() {
                     {upcomingPayments.length === 0 && (
                       <div className="text-center p-8 border border-dashed rounded-lg">
                         <Clock className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-muted-foreground">No upcoming payments in the next 30 days</p>
+                        <p className="text-muted-foreground">No upcoming payments this month</p>
                       </div>
                     )}
                   </div>

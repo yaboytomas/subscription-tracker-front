@@ -147,7 +147,7 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
     fetchSubscriptions();
   }, [toast, refreshTrigger]);
 
-  // Get upcoming payments (next 7 days)
+  // Get upcoming payments (current month only)
   const upcomingPayments = subscriptions
     .map(sub => {
       // Calculate accurate next payment date
@@ -160,8 +160,14 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
         daysLeft
       };
     })
-    // Only include payments in the next 7 days
-    .filter(sub => sub.daysLeft >= 0 && sub.daysLeft <= 7)
+    // Only include payments for current month
+    .filter(sub => {
+      const paymentDate = new Date(sub.accurateNextPayment);
+      const today = new Date();
+      return paymentDate.getMonth() === today.getMonth() && 
+             paymentDate.getFullYear() === today.getFullYear() &&
+             sub.daysLeft >= 0;
+    })
     // Sort by days left (soonest first)
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
@@ -275,7 +281,7 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{upcomingPayments.length}</div>
-                <p className="text-xs text-muted-foreground">Next 7 days</p>
+                <p className="text-xs text-muted-foreground">This month</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -437,12 +443,12 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
               <CalendarClock className="h-5 w-5" />
               Upcoming Payments
             </DialogTitle>
-            <DialogDescription>Payments due in the next 7 days.</DialogDescription>
+            <DialogDescription>Payments due this month.</DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             {upcomingPayments.length === 0 ? (
               <div className="py-10 text-center">
-                <p className="text-muted-foreground">No payments due in the next 7 days.</p>
+                <p className="text-muted-foreground">No payments due this month.</p>
               </div>
             ) : (
               <div className="space-y-4 pr-4">

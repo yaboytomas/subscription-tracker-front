@@ -3,6 +3,9 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { getCurrentUser } from '@/lib/auth';
 
+// Cache duration in seconds (5 minutes)
+const CACHE_DURATION = 300;
+
 // GET the current user's profile
 export async function GET(req: NextRequest) {
   try {
@@ -29,7 +32,8 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    return NextResponse.json({
+    // Create response with data
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user._id,
@@ -43,6 +47,12 @@ export async function GET(req: NextRequest) {
         }
       },
     });
+
+    // Add caching headers
+    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=60`);
+    response.headers.set('ETag', `"${user._id}-${user.updatedAt.getTime()}"`);
+
+    return response;
   } catch (error: any) {
     console.error('Error fetching user profile:', error);
     return NextResponse.json(
