@@ -219,14 +219,67 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
       <div className="flex flex-col gap-4 w-full">
         <div className="grid gap-4 md:grid-cols-3 w-full">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="opacity-50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
-              </CardContent>
-            </Card>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                delay: i * 0.1,
+                duration: 0.5
+              }}
+            >
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    <motion.div 
+                      className="h-4 w-24 bg-gray-200 rounded"
+                      initial={{ opacity: 0.5 }}
+                      animate={{ opacity: [0.5, 0.8, 0.5] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </CardTitle>
+                  <motion.div 
+                    className="h-4 w-4 bg-gray-200 rounded-full"
+                    initial={{ opacity: 0.5 }}
+                    animate={{ opacity: [0.5, 0.8, 0.5] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.2
+                    }}
+                  />
+                </CardHeader>
+                <CardContent>
+                  <motion.div 
+                    className="h-8 w-16 bg-gray-200 rounded mb-2"
+                    initial={{ opacity: 0.5 }}
+                    animate={{ opacity: [0.5, 0.9, 0.5] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.3
+                    }}
+                  />
+                  <motion.div 
+                    className="h-3 w-28 bg-gray-200 rounded"
+                    initial={{ opacity: 0.5 }}
+                    animate={{ opacity: [0.5, 0.7, 0.5] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.4
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -240,7 +293,14 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
         <div className="grid gap-4 md:grid-cols-3 w-full">
           <motion.div
             whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 10,
+              delay: 0.1
+            }}
           >
             <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("subscriptions")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -248,15 +308,67 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{subscriptions.length}</div>
-                <p className="text-xs text-muted-foreground">Active subscriptions</p>
+                <motion.div 
+                  className="text-2xl font-bold"
+                  initial={{ scale: 0.7 }}
+                  animate={{ scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 200,
+                    delay: 0.2
+                  }}
+                >
+                  {subscriptions.length}
+                </motion.div>
+                <p className="text-xs text-muted-foreground">Active subscription services</p>
               </CardContent>
             </Card>
           </motion.div>
-
+          
           <motion.div
             whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 10,
+              delay: 0.2
+            }}
+          >
+            <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("payments")}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Upcoming Payments</CardTitle>
+                <CalendarClock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  className="text-2xl font-bold"
+                  initial={{ scale: 0.7 }}
+                  animate={{ scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 200,
+                    delay: 0.3
+                  }}
+                >
+                  {upcomingPayments.length}
+                </motion.div>
+                <p className="text-xs text-muted-foreground">Payments due this month</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 10,
+              delay: 0.3
+            }}
           >
             <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("spending")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -264,24 +376,19 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${monthlySpending.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Estimated monthly cost</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
-          >
-            <Card className="cursor-pointer transition-all hover:shadow-md" onClick={() => setOpenDialog("upcoming")}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Payments</CardTitle>
-                <CalendarClock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{upcomingPayments.length}</div>
-                <p className="text-xs text-muted-foreground">This month</p>
+                <motion.div 
+                  className="text-2xl font-bold"
+                  initial={{ scale: 0.7 }}
+                  animate={{ scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 200,
+                    delay: 0.4
+                  }}
+                >
+                  ${monthlySpending.toFixed(2)}
+                </motion.div>
+                <p className="text-xs text-muted-foreground">${(monthlySpending * 12).toFixed(2)} per year</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -436,7 +543,7 @@ export function SubscriptionStats({ refreshTrigger = 0 }) {
       </Dialog>
 
       {/* Upcoming Payments Dialog */}
-      <Dialog open={openDialog === "upcoming"} onOpenChange={(open) => !open && setOpenDialog(null)}>
+      <Dialog open={openDialog === "payments"} onOpenChange={(open) => !open && setOpenDialog(null)}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

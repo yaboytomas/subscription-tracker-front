@@ -268,18 +268,76 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
 
   if (isLoading) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
-              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Monthly Spending by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] flex items-center justify-center">
+              <motion.div 
+                className="rounded-full h-[200px] w-[200px] border-8 border-gray-200"
+                initial={{ rotate: 0, borderTopColor: colors[0] }}
+                animate={{ 
+                  rotate: 360,
+                  borderTopColor: colors[0]
+                }}
+                transition={{ 
+                  duration: 1.5, 
+                  repeat: Infinity, 
+                  ease: "linear"
+                }}
+              >
+                <motion.div 
+                  className="h-full w-full rounded-full flex items-center justify-center"
+                  initial={{ scale: 0.6, opacity: 0.4 }}
+                  animate={{ scale: 1, opacity: 0.8 }}
+                  transition={{ 
+                    duration: 1.2, 
+                    repeat: Infinity, 
+                    repeatType: "reverse",
+                    ease: "easeInOut"
+                  }}
+                >
+                  <DollarSign className="h-12 w-12 text-primary opacity-50" />
+                </motion.div>
+              </motion.div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="mt-4 text-center">
+              <div className="text-sm font-medium opacity-70">Loading spending data...</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="w-full">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Spending Over Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] flex items-center justify-center flex-col">
+              <div className="w-full h-[220px] flex items-end justify-around px-10">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="bg-primary/30 w-8 rounded-t"
+                    initial={{ height: 0 }}
+                    animate={{ height: [0, Math.random() * 100 + 20, 0] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="mt-4 w-full border-t border-gray-200 text-center pt-4">
+                <div className="text-sm font-medium opacity-70">Loading chart data...</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -303,6 +361,10 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
+                  animationBegin={0}
+                  animationDuration={1200}
+                  animationEasing="ease-out"
+                  isAnimationActive={true}
                 >
                   {data.length > 0 ? (
                     data.map((entry, index) => (
@@ -334,11 +396,28 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-4 text-center">
+          <motion.div 
+            className="mt-4 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+          >
             <div className="text-sm font-medium">Total Monthly Spending</div>
-            <div className="text-2xl font-bold">${totalSpending.toFixed(2)}</div>
+            <motion.div 
+              className="text-2xl font-bold"
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              transition={{ 
+                delay: 1.2,
+                duration: 0.5,
+                type: "spring",
+                stiffness: 200
+              }}
+            >
+              ${totalSpending.toFixed(2)}
+            </motion.div>
             <div className="text-xs text-muted-foreground">Click for details</div>
-          </div>
+          </motion.div>
         </CardContent>
       </Card>
 
@@ -397,6 +476,10 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                   opacity={0.7}
                   barSize={30}
                   radius={[4, 4, 0, 0]}
+                  animationBegin={0}
+                  animationDuration={1200}
+                  animationEasing="ease-out"
+                  isAnimationActive={true}
                 >
                   {timeData.map((entry, index) => (
                     <Cell 
@@ -581,24 +664,25 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-xl font-bold">${selectedSubscription?.price.toFixed(2)}</h3>
-                <p className="text-sm text-muted-foreground">per {selectedSubscription?.billingCycle.toLowerCase().replace('ly', '')}</p>
+                <h3 className="text-xl font-bold">${selectedSubscription?.price?.toFixed(2) || '0.00'}</h3>
+                <p className="text-sm text-muted-foreground">per {selectedSubscription?.billingCycle?.toLowerCase().replace('ly', '') || 'period'}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium">Monthly equivalent</p>
                 <p className="text-lg">
-                  ${selectedSubscription?.billingCycle === "Monthly" 
-                    ? selectedSubscription?.price.toFixed(2) 
-                    : selectedSubscription?.billingCycle === "Yearly" 
-                      ? (selectedSubscription?.price / 12).toFixed(2)
-                      : selectedSubscription?.billingCycle === "Weekly"
-                        ? (selectedSubscription?.price * 4.33).toFixed(2)
-                        : selectedSubscription?.billingCycle === "Quarterly"
-                          ? (selectedSubscription?.price / 3).toFixed(2)
-                          : selectedSubscription?.billingCycle === "Biweekly"
-                            ? (selectedSubscription?.price * 2.17).toFixed(2)
-                            : selectedSubscription?.price.toFixed(2)
-                  }
+                  ${selectedSubscription && selectedSubscription.price ? (
+                    selectedSubscription.billingCycle === "Monthly" 
+                      ? selectedSubscription.price.toFixed(2) 
+                      : selectedSubscription.billingCycle === "Yearly" 
+                        ? (selectedSubscription.price / 12).toFixed(2)
+                        : selectedSubscription.billingCycle === "Weekly"
+                          ? (selectedSubscription.price * 4.33).toFixed(2)
+                          : selectedSubscription.billingCycle === "Quarterly"
+                            ? (selectedSubscription.price / 3).toFixed(2)
+                            : selectedSubscription.billingCycle === "Biweekly"
+                              ? (selectedSubscription.price * 2.17).toFixed(2)
+                              : selectedSubscription.price.toFixed(2)
+                  ) : '0.00'}
                 </p>
               </div>
             </div>
@@ -625,18 +709,19 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground">Annual Cost</h4>
                 <p className="text-base">
-                  ${selectedSubscription?.billingCycle === "Monthly" 
-                    ? (selectedSubscription?.price * 12).toFixed(2) 
-                    : selectedSubscription?.billingCycle === "Yearly" 
-                      ? selectedSubscription?.price.toFixed(2)
-                      : selectedSubscription?.billingCycle === "Weekly"
-                        ? (selectedSubscription?.price * 52).toFixed(2)
-                        : selectedSubscription?.billingCycle === "Quarterly"
-                          ? (selectedSubscription?.price * 4).toFixed(2)
-                          : selectedSubscription?.billingCycle === "Biweekly"
-                            ? (selectedSubscription?.price * 26).toFixed(2)
-                            : (selectedSubscription?.price * 12).toFixed(2)
-                  }
+                  ${selectedSubscription && selectedSubscription.price ? (
+                    selectedSubscription.billingCycle === "Monthly" 
+                      ? (selectedSubscription.price * 12).toFixed(2) 
+                      : selectedSubscription.billingCycle === "Yearly" 
+                        ? selectedSubscription.price.toFixed(2)
+                        : selectedSubscription.billingCycle === "Weekly"
+                          ? (selectedSubscription.price * 52).toFixed(2)
+                          : selectedSubscription.billingCycle === "Quarterly"
+                            ? (selectedSubscription.price * 4).toFixed(2)
+                            : selectedSubscription.billingCycle === "Biweekly"
+                              ? (selectedSubscription.price * 26).toFixed(2)
+                              : (selectedSubscription.price * 12).toFixed(2)
+                  ) : '0.00'}
                 </p>
               </div>
               
