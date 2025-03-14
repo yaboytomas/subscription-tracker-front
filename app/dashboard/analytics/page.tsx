@@ -600,23 +600,26 @@ export default function AnalyticsPage() {
       <Card className="border border-border shadow-sm">
         <CardHeader className="pb-2 border-b">
           <Tabs defaultValue="spending" onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 w-full md:w-auto">
+            <TabsList className="grid grid-cols-3 w-full">
               <TabsTrigger value="spending">
                 <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Spending Analysis
+                  <DollarSign className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Spending Analysis</span>
+                  <span className="inline sm:hidden ml-1 text-xs">Spending</span>
                 </div>
               </TabsTrigger>
               <TabsTrigger value="breakdown">
                 <div className="flex items-center">
-                  <PieChartIcon className="h-4 w-4 mr-2" />
-                  Category Breakdown
+                  <PieChartIcon className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Category Breakdown</span>
+                  <span className="inline sm:hidden ml-1 text-xs">Categories</span>
                 </div>
               </TabsTrigger>
               <TabsTrigger value="trends">
                 <div className="flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Spending Trends
+                  <TrendingUp className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Spending Trends</span>
+                  <span className="inline sm:hidden ml-1 text-xs">Trends</span>
                 </div>
               </TabsTrigger>
             </TabsList>

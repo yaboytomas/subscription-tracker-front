@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { FloatingNav } from "@/components/floating-nav"
+import { ResponsiveNav } from "@/components/responsive-nav"
 import { ArrowRight, CheckCircle2, CreditCard, Bell, PiggyBank, BarChart4, Calendar, Shield } from "lucide-react"
 import dynamic from "next/dynamic"
 
@@ -72,20 +72,20 @@ const testimonials = [
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-muted/20">
-      <FloatingNav />
+      <ResponsiveNav />
       
-      <main className="flex-1">
+      <main className="flex-1 pt-16 md:pt-0">
         {/* Hero Section */}
-        <section className="w-full py-12 md:py-16 lg:py-20 relative overflow-hidden">
+        <section className="w-full py-6 md:py-12 lg:py-16 relative overflow-hidden">
           <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
           <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-secondary/10 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
           
           <div className="container mx-auto px-4 relative z-10">
-            <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16 xl:grid-cols-[1fr_1fr]">
+            <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-12 xl:grid-cols-[1fr_1fr]">
               <AnimatedContentComponent>
-                <div className="flex flex-col justify-center space-y-8">
-                  <div className="space-y-4">
+                <div className="flex flex-col justify-center space-y-6">
+                  <div className="space-y-3">
                     <div className="inline-flex items-center rounded-full border bg-background/80 backdrop-blur-sm px-4 py-1.5 text-sm font-medium shadow-sm">
                       <span className="mr-2 text-primary">✨</span>
                       Smart subscription management
