@@ -101,16 +101,27 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
-        const response = await fetch('/api/subscriptions')
+        // Add cache-busting timestamp to avoid cached responses
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/subscriptions?_t=${timestamp}`, {
+          // Add cache: 'no-store' to prevent caching
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+          }
+        });
         
         if (!response.ok) {
           throw new Error('Failed to fetch subscriptions')
         }
         
         const data = await response.json()
+        console.log('Dashboard - Fetched subscription data:', data);
         
         if (data.success) {
           const subs = data.subscriptions || [];
+          console.log(`Dashboard - Displaying ${subs.length} subscriptions`);
           setSubscriptions(subs);
           
           // Calculate monthly spending

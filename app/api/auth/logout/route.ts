@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteTokenCookie } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    // Clear the auth cookie
-    deleteTokenCookie();
-    
     // Create response
     const response = NextResponse.json({
       success: true,
       message: 'Logged out successfully',
     });
     
-    // Set explicit cookie clearing headers for extra security
-    response.headers.set('Set-Cookie', 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict');
+    // Clear the auth cookie directly on the response
+    response.cookies.set({
+      name: 'token',
+      value: '',
+      httpOnly: true,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 0,
+      expires: new Date(0),
+      sameSite: 'strict',
+    });
     
     // Add Clear-Site-Data header to clear client-side storage
     // This is supported in most modern browsers and helps clear localStorage, sessionStorage, etc.

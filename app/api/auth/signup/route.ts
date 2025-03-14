@@ -47,16 +47,8 @@ export async function POST(req: NextRequest) {
     // Generate token
     const token = createToken(user);
     
-    // Set cookie
-    setTokenCookie(token);
-    
-    // Send welcome email (don't await to avoid delaying response)
-    sendWelcomeEmail({ email, name }).catch(error => {
-      console.error('Error sending welcome email:', error);
-    });
-    
-    // Return user data (excluding password)
-    return NextResponse.json({
+    // Create response
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user._id,
@@ -64,6 +56,25 @@ export async function POST(req: NextRequest) {
         email: user.email,
       },
     });
+    
+    // Set token cookie directly on the response
+    response.cookies.set({
+      name: 'token',
+      value: token,
+      httpOnly: true,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: 'strict',
+    });
+    
+    // Send welcome email (don't await to avoid delaying response)
+    sendWelcomeEmail({ email, name }).catch(error => {
+      console.error('Error sending welcome email:', error);
+    });
+    
+    // Return user data (excluding password)
+    return response;
   } catch (error: any) {
     console.error('Signup error:', error);
     return NextResponse.json(

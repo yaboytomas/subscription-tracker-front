@@ -154,14 +154,11 @@ export async function POST(req: NextRequest) {
     
     console.log("Login successful, returning success response");
     
-    // Generate token and set cookie in parallel
-    const [token] = await Promise.all([
-      createToken(user),
-      setTokenCookie(createToken(user))
-    ]);
-    
-    // Return user data
-    return NextResponse.json({
+    // Generate token
+    const token = createToken(user);
+
+    // Create response
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user._id,
@@ -169,6 +166,20 @@ export async function POST(req: NextRequest) {
         email: user.email,
       },
     });
+
+    // Set token cookie directly on the response
+    response.cookies.set({
+      name: 'token',
+      value: token,
+      httpOnly: true,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: 'strict',
+    });
+
+    // Return response
+    return response;
   } catch (error: any) {
     console.error('Login error:', error);
     return NextResponse.json(

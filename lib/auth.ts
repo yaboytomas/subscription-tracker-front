@@ -21,6 +21,10 @@ export const createToken = (user: any) => {
 
 // Set cookie with token
 export const setTokenCookie = (token: string) => {
+  // Clear any existing token first
+  cookies().delete('token');
+  
+  // Set the new token
   cookies().set({
     name: 'token',
     value: token,
@@ -66,16 +70,22 @@ export const getCurrentUser = async (req: NextRequest) => {
     const token = req.cookies.get('token')?.value;
     
     if (!token) {
+      console.log('No token found in request cookies');
       return null;
     }
     
+    console.log('Token found, attempting to decode');
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    console.log('Token decoded successfully, user ID:', decoded.id);
+    
     const user = await User.findById(decoded.id);
     
     if (!user) {
+      console.log('No user found with ID:', decoded.id);
       return null;
     }
     
+    console.log('User found successfully:', user.name, user.email);
     return {
       id: user._id.toString(),
       name: user.name,

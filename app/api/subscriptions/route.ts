@@ -13,18 +13,28 @@ export async function GET(req: NextRequest) {
     // Connect to database
     await dbConnect();
     
+    console.log('GET /api/subscriptions - Fetching current user');
     // Get current user from token
     const user = await getCurrentUser(req);
     
     if (!user) {
+      console.log('GET /api/subscriptions - User not authenticated');
       return NextResponse.json(
         { success: false, message: 'Not authenticated' },
         { status: 401 }
       );
     }
     
+    console.log(`GET /api/subscriptions - User authenticated: ${user.id} (${user.email})`);
+    
     // Find all subscriptions for this user
+    console.log(`GET /api/subscriptions - Fetching subscriptions for user: ${user.id}`);
     const subscriptions = await Subscription.find({ userId: user.id });
+    
+    console.log(`GET /api/subscriptions - Found ${subscriptions.length} subscriptions`);
+    if (subscriptions.length > 0) {
+      console.log(`GET /api/subscriptions - First subscription userId: ${subscriptions[0].userId}`);
+    }
     
     // Create response with data
     const response = NextResponse.json({
@@ -32,9 +42,12 @@ export async function GET(req: NextRequest) {
       subscriptions,
     });
 
-    // Add caching headers
-    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=30`);
-    
+    // Disable caching to ensure fresh data on each request
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Surrogate-Control', 'no-store');
+
     // Create a unique ETag based on the user's ID and the latest subscription update
     const latestUpdate = subscriptions.length > 0 
       ? Math.max(...subscriptions.map(sub => sub.updatedAt.getTime()))
