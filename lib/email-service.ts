@@ -3,6 +3,9 @@ import { Resend } from 'resend';
 // Initialize Resend with API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Sender email - using your verified domain (no need for actual email accounts)
+const SENDER_EMAIL = 'Subscription Tracker <noreply@zabotec.com>'; // Using verified domain
+
 /**
  * Sends a welcome email to a new user
  */
@@ -10,17 +13,18 @@ export async function sendWelcomeEmail(user: { email: string, name: string }) {
   try {
     console.log(`Attempting to send welcome email to ${user.email}`);
     
-    // During testing with free Resend account, always send to your verified email
-    const recipient = process.env.NODE_ENV === 'production' ? user.email : 'tomasszabo94@gmail.com';
+    // Send to the actual email address
+    const recipient = user.email;
     
     const data = await resend.emails.send({
-      from: 'Subscription Tracker <onboarding@resend.dev>', // Default sender that works without domain verification
+      from: SENDER_EMAIL, // Using your verified domain
       to: recipient,
       subject: 'Welcome to Subscription Tracker',
       html: `
         <h1>Welcome to Subscription Tracker!</h1>
         <p>Hello ${user.name},</p>
         <p>Thank you for joining Subscription Tracker. We're excited to help you manage your subscriptions.</p>
+        
         <p>Get started by adding your first subscription on your dashboard.</p>
         <p>Best regards,<br>The Subscription Tracker Team</p>
       `
@@ -41,11 +45,11 @@ export async function sendPasswordChangedEmail(user: { email: string, name: stri
   try {
     console.log(`Attempting to send password changed email to ${user.email}`);
     
-    // During testing with free Resend account, always send to your verified email
-    const recipient = process.env.NODE_ENV === 'production' ? user.email : 'tomasszabo94@gmail.com';
+    // Send to the actual email address
+    const recipient = user.email;
     
     const data = await resend.emails.send({
-      from: 'Subscription Tracker <onboarding@resend.dev>', // Default sender that works without domain verification
+      from: SENDER_EMAIL, // Using your verified domain
       to: recipient,
       subject: 'Your Password Has Been Changed',
       html: `
@@ -71,8 +75,8 @@ export async function sendPaymentReminderEmail(user: { email: string, name: stri
   try {
     console.log(`Attempting to send payment reminder email to ${user.email} for ${subscription.name}`);
     
-    // During testing with free Resend account, always send to your verified email
-    const recipient = process.env.NODE_ENV === 'production' ? user.email : 'tomasszabo94@gmail.com';
+    // Send to the actual email address
+    const recipient = user.email;
     
     const dueDate = new Date(subscription.nextPayment).toLocaleDateString('en-US', {
       weekday: 'long',
@@ -87,7 +91,7 @@ export async function sendPaymentReminderEmail(user: { email: string, name: stri
       : `in ${subscription.daysUntilPayment} days`;
     
     const data = await resend.emails.send({
-      from: 'Subscription Tracker <onboarding@resend.dev>', // Default sender that works without domain verification
+      from: SENDER_EMAIL, // Using your verified domain
       to: recipient,
       subject: `Reminder: ${subscription.name} payment due soon`,
       html: `
@@ -122,15 +126,15 @@ export async function sendPasswordResetEmail(user: { email: string, name: string
   try {
     console.log(`Attempting to send password reset email to ${user.email}`);
     
-    // During testing with free Resend account, always send to your verified email
-    const recipient = process.env.NODE_ENV === 'production' ? user.email : 'tomasszabo94@gmail.com';
+    // Send to the actual email address
+    const recipient = user.email;
     
     // Create the reset URL - use the deployment URL or localhost for development
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
     
     const data = await resend.emails.send({
-      from: 'Subscription Tracker <onboarding@resend.dev>', // Default sender that works without domain verification
+      from: SENDER_EMAIL, // Using your verified domain
       to: recipient,
       subject: 'Reset Your Password - Subscription Tracker',
       html: `
@@ -171,11 +175,11 @@ export async function sendTestEmail(email: string) {
   try {
     console.log(`Sending test email to ${email}`);
     
-    // During testing with free Resend account, always send to your verified email
-    const recipient = process.env.NODE_ENV === 'production' ? email : 'tomasszabo94@gmail.com';
+    // Send to the actual email address
+    const recipient = email;
     
     const data = await resend.emails.send({
-      from: 'Subscription Tracker <onboarding@resend.dev>',
+      from: SENDER_EMAIL, // Using your verified domain
       to: recipient,
       subject: 'Test Email from Subscription Tracker',
       html: `
@@ -205,14 +209,14 @@ export async function sendEmailChangeNotificationToOldEmail(user: {
   try {
     console.log(`Sending email change notification to previous email: ${user.previousEmail}`);
     
-    // During testing with free Resend account, always send to your verified email
-    const recipient = process.env.NODE_ENV === 'production' ? user.previousEmail : 'tomasszabo94@gmail.com';
+    // Send to the actual previous email
+    const recipient = user.previousEmail;
     
     // Format the IP address for display, if available
     const ipInfo = user.ipAddress ? `from IP address ${user.ipAddress}` : '';
     
     const data = await resend.emails.send({
-      from: 'Subscription Tracker <onboarding@resend.dev>', // Using default sender that works without domain verification
+      from: SENDER_EMAIL,
       to: recipient,
       subject: 'Your Email Address Has Been Changed',
       html: `
@@ -259,11 +263,11 @@ export async function sendEmailChangeConfirmationToNewEmail(user: {
   try {
     console.log(`Sending email change confirmation to new email: ${user.newEmail}`);
     
-    // During testing with free Resend account, always send to your verified email
-    const recipient = process.env.NODE_ENV === 'production' ? user.newEmail : 'tomasszabo94@gmail.com';
+    // Send to the actual new email address
+    const recipient = user.newEmail;
     
     const data = await resend.emails.send({
-      from: 'Subscription Tracker <onboarding@resend.dev>', // Using default sender that works without domain verification
+      from: SENDER_EMAIL,
       to: recipient,
       subject: 'Email Address Change Confirmation',
       html: `
@@ -315,8 +319,8 @@ export async function sendMonthlySpendingReport(
   try {
     console.log(`Attempting to send monthly spending report to ${user.email} for ${reportData.monthName} ${reportData.year}`);
     
-    // During testing with free Resend account, always send to your verified email
-    const recipient = process.env.NODE_ENV === 'production' ? user.email : 'tomasszabo94@gmail.com';
+    // Send to the actual email address
+    const recipient = user.email;
     
     // Format the currency
     const formatCurrency = (amount: number) => {
@@ -377,7 +381,7 @@ export async function sendMonthlySpendingReport(
     }
 
     const data = await resend.emails.send({
-      from: 'Subscription Tracker <onboarding@resend.dev>',
+      from: SENDER_EMAIL, // Using your verified domain
       to: recipient,
       subject: `Your ${reportData.monthName} ${reportData.year} Spending Report`,
       html: `
