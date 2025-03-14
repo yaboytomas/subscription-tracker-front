@@ -4,7 +4,9 @@ import { useState, useEffect } from "react"
 // Only import basic components
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bell, Calendar } from "lucide-react"
+import { Bell, Calendar, ArrowLeft, ArrowRight } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calendar as CalendarComponent } from "@/components/calendar"
 
 interface Subscription {
   _id: string;
@@ -107,12 +109,71 @@ const calculateNextPaymentDate = (startDate: string, billingCycle: string): Date
   return nextPaymentDate
 }
 
+// Function to generate the next several payment dates
+const generateFuturePaymentDates = (startDate: string, billingCycle: string, count: number = 6): Date[] => {
+  const dates: Date[] = [];
+  let nextDate = new Date(startDate);
+  
+  for (let i = 0; i < count; i++) {
+    // First handle the initial payment date
+    if (i === 0) {
+      // If start date is in the future, use it as the first payment
+      if (nextDate > new Date()) {
+        dates.push(new Date(nextDate));
+        continue;
+      }
+      
+      // Otherwise, find the next payment date after today
+      nextDate = calculateNextPaymentDate(startDate, billingCycle);
+      dates.push(new Date(nextDate));
+      continue;
+    }
+    
+    // For subsequent payments, add according to billing cycle
+    switch (billingCycle.toLowerCase()) {
+      case 'weekly':
+        nextDate = new Date(dates[i-1]);
+        nextDate.setDate(nextDate.getDate() + 7);
+        break;
+      case 'biweekly':
+        nextDate = new Date(dates[i-1]);
+        nextDate.setDate(nextDate.getDate() + 14);
+        break;
+      case 'monthly':
+        nextDate = new Date(dates[i-1]);
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        break;
+      case 'quarterly':
+        nextDate = new Date(dates[i-1]);
+        nextDate.setMonth(nextDate.getMonth() + 3);
+        break;
+      case 'yearly':
+        nextDate = new Date(dates[i-1]);
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+        break;
+      default:
+        nextDate = new Date(dates[i-1]);
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        break;
+    }
+    
+    dates.push(new Date(nextDate));
+  }
+  
+  return dates;
+}
+
 export default function RemindersPage() {
   const [activeTab, setActiveTab] = useState('upcoming')
   const [currentMonthPayments, setCurrentMonthPayments] = useState<PastPayment[]>([])
   const [upcomingReminders, setUpcomingReminders] = useState<UpcomingPayment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [view, setView] = useState<'list' | 'calendar'>('list')
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [calendarEvents, setCalendarEvents] = useState<{date: Date; subscriptions: {id: string; name: string; price: number}[]}[]>([])
+  const [allSubscriptions, setAllSubscriptions] = useState<Subscription[]>([])
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   // Function to get real subscription data
   useEffect(() => {
@@ -120,6 +181,9 @@ export default function RemindersPage() {
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
+    
+    // Reset selected date when changing view
+    setSelectedDate(null)
     
     const fetchSubscriptions = async () => {
       setIsLoading(true)
@@ -140,6 +204,7 @@ export default function RemindersPage() {
         }
         
         const subscriptions: Subscription[] = data.subscriptions || []
+        setAllSubscriptions(subscriptions)
         
         // Calculate past payments for the current month
         const formattedPastPayments = subscriptions
@@ -163,7 +228,7 @@ export default function RemindersPage() {
         
         setCurrentMonthPayments(formattedPastPayments);
         
-        // Calculate upcoming payments
+        // Calculate upcoming payments - MODIFIED to only show current month
         const upcoming = subscriptions
           .map(subscription => {
             const nextPaymentDate = calculateNextPaymentDate(
@@ -173,6 +238,7 @@ export default function RemindersPage() {
             
             const today = new Date();
             
+            // Only include payments for the current month
             if (nextPaymentDate.getMonth() === today.getMonth() && 
                 nextPaymentDate.getFullYear() === today.getFullYear() &&
                 nextPaymentDate >= today) {
@@ -195,6 +261,43 @@ export default function RemindersPage() {
           }));
         
         setUpcomingReminders(upcoming);
+        
+        // Generate calendar events for the next 6 months
+        const events: {date: Date; subscriptions: {id: string; name: string; price: number}[]}[] = [];
+        const processedDates = new Map<string, {id: string; name: string; price: number}[]>();
+        
+        subscriptions.forEach(subscription => {
+          const nextSixPayments = generateFuturePaymentDates(
+            subscription.startDate, 
+            subscription.billingCycle,
+            6
+          );
+          
+          nextSixPayments.forEach(paymentDate => {
+            const dateString = paymentDate.toISOString().split('T')[0];
+            
+            if (!processedDates.has(dateString)) {
+              processedDates.set(dateString, []);
+            }
+            
+            processedDates.get(dateString)?.push({
+              id: subscription._id,
+              name: subscription.name,
+              price: parseFloat(subscription.price || '0')
+            });
+          });
+        });
+        
+        // Convert map to array
+        processedDates.forEach((subscriptions, dateString) => {
+          events.push({
+            date: new Date(dateString),
+            subscriptions
+          });
+        });
+        
+        setCalendarEvents(events);
+        
       } catch (err) {
         console.error('Error fetching subscriptions:', err)
         setError(err instanceof Error ? err.message : 'An error occurred while fetching your subscriptions')
@@ -205,6 +308,46 @@ export default function RemindersPage() {
     
     fetchSubscriptions()
   }, [])
+
+  // Handle month navigation for the calendar
+  const handlePreviousMonth = () => {
+    const previousMonth = new Date(currentMonth);
+    previousMonth.setMonth(previousMonth.getMonth() - 1);
+    setCurrentMonth(previousMonth);
+    setSelectedDate(null);
+  };
+  
+  const handleNextMonth = () => {
+    const nextMonth = new Date(currentMonth);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    setCurrentMonth(nextMonth);
+    setSelectedDate(null);
+  };
+  
+  // Function to get events for a specific day
+  const getEventsForDate = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return calendarEvents
+      .filter(event => event.date.toISOString().split('T')[0] === dateString)
+      .flatMap(event => event.subscriptions);
+  };
+  
+  // Function to check if a date has any events
+  const hasEvents = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return calendarEvents.some(event => 
+      event.date.toISOString().split('T')[0] === dateString
+    );
+  };
+  
+  // Handle calendar day selection
+  const handleDaySelect = (date: Date | undefined) => {
+    if (date && hasEvents(date)) {
+      setSelectedDate(date);
+    } else {
+      setSelectedDate(null);
+    }
+  };
 
   return (
     <div className="container max-w-5xl py-8 space-y-8">
@@ -236,87 +379,263 @@ export default function RemindersPage() {
           </Button>
         </div>
       ) : (
-        /* Content with Card styling from subscriptions page */
-        <Card className="border border-border shadow-sm overflow-hidden">
-          <CardHeader className="pb-4 border-b bg-primary/5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                <div>
-                  <CardTitle>Payment Reminders</CardTitle>
-                  <CardDescription>Track your past and upcoming subscription payments.</CardDescription>
+        /* View toggle and content */
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold">Payment Reminders</h2>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant={view === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setView('list')}
+              >
+                List View
+              </Button>
+              <Button
+                variant={view === 'calendar' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setView('calendar')}
+              >
+                Calendar View
+              </Button>
+            </div>
+          </div>
+          
+          {view === 'list' ? (
+            /* List view - Original content with Card styling from subscriptions page */
+            <Card className="border border-border shadow-sm overflow-hidden">
+              <CardHeader className="pb-4 border-b bg-primary/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <div>
+                      <CardTitle>Payment Reminders</CardTitle>
+                      <CardDescription>Track your past and upcoming subscription payments.</CardDescription>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-1">
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                      <TabsList>
+                        <TabsTrigger value="upcoming">
+                          Upcoming
+                        </TabsTrigger>
+                        <TabsTrigger value="past">
+                          This Month
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
                 </div>
-              </div>
+              </CardHeader>
               
-              <div className="flex space-x-2">
-                <Button
-                  variant={activeTab === 'upcoming' ? "default" : "outline"}
-                  onClick={() => setActiveTab('upcoming')}
-                  className={activeTab !== 'upcoming' ? "border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors" : ""}
-                >
-                  Upcoming
-                </Button>
-                <Button
-                  variant={activeTab === 'past' ? "default" : "outline"}
-                  onClick={() => setActiveTab('past')}
-                  className={activeTab !== 'past' ? "border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors" : ""}
-                >
-                  Past
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="pt-6 px-6 pb-6">
-              {activeTab === 'upcoming' ? (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Upcoming Reminders</h2>
-                  {upcomingReminders.length > 0 ? (
-                    <div className="space-y-2">
-                      {upcomingReminders.map(reminder => (
-                        <div key={reminder.id} className="border p-4 rounded-md flex justify-between items-center hover:bg-muted/50 transition-colors">
-                          <div>
-                            <p className="font-medium">{reminder.name}</p>
-                            <p className="text-sm text-muted-foreground">{reminder.date}</p>
-                          </div>
-                          <p className="font-medium">${reminder.price.toFixed(2)}</p>
+              <CardContent className="p-0">
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsContent value="upcoming">
+                    <div className="p-6">
+                      {upcomingReminders.length === 0 ? (
+                        <div className="text-center py-6">
+                          <p className="text-muted-foreground">You have no upcoming renewals in the current month.</p>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center p-8 border border-dashed rounded-lg">
-                      <p className="text-muted-foreground">No upcoming payments this month.</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Past Payments (Current Month)</h2>
-                  {currentMonthPayments.length > 0 ? (
-                    <div className="space-y-2">
-                      {currentMonthPayments.map(payment => (
-                        <div key={payment.id} className="border p-4 rounded-md flex justify-between items-center hover:bg-muted/50 transition-colors">
-                          <div>
-                            <p className="font-medium">{payment.name}</p>
-                            <p className="text-sm text-muted-foreground">{payment.date}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">${payment.price.toFixed(2)}</p>
-                            <p className="text-xs text-green-500">{payment.status}</p>
-                          </div>
+                      ) : (
+                        <div className="divide-y">
+                          {upcomingReminders.map(reminder => (
+                            <div key={reminder.id} className="py-4 flex items-center justify-between">
+                              <div>
+                                <div className="font-medium">{reminder.name}</div>
+                                <div className="text-sm text-muted-foreground">Due on {reminder.date}</div>
+                              </div>
+                              <div className="font-medium text-primary">${reminder.price.toFixed(2)}</div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  ) : (
-                    <div className="text-center p-8 border border-dashed rounded-lg">
-                      <p className="text-muted-foreground">No payments recorded for the current month.</p>
+                  </TabsContent>
+                  
+                  <TabsContent value="past">
+                    <div className="p-6">
+                      {currentMonthPayments.length === 0 ? (
+                        <div className="text-center py-6">
+                          <p className="text-muted-foreground">No payments for the current month yet.</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y">
+                          {currentMonthPayments.map(payment => (
+                            <div key={payment.id} className="py-4 flex items-center justify-between">
+                              <div>
+                                <div className="font-medium">{payment.name}</div>
+                                <div className="text-sm text-muted-foreground">Paid on {payment.date}</div>
+                              </div>
+                              <div className="font-medium text-green-600">${payment.price.toFixed(2)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          ) : (
+            /* Calendar view */
+            <Card className="border border-border shadow-sm overflow-hidden">
+              <CardHeader className="pb-4 border-b bg-primary/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <div>
+                      <CardTitle>Renewal Calendar</CardTitle>
+                      <CardDescription>View all your subscription renewals in calendar format.</CardDescription>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" onClick={handlePreviousMonth}>
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="font-medium">
+                      {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleNextMonth}>
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardHeader>
+              
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-6">
+                  <div className="flex flex-col">
+                    <div className="calendar-container">
+                      <CalendarComponent
+                        mode="default"
+                        month={currentMonth}
+                        onMonthChange={setCurrentMonth}
+                        modifiers={{
+                          hasEvent: (date) => hasEvents(date)
+                        }}
+                        modifiersClassNames={{
+                          hasEvent: "bg-primary/20 font-bold text-primary"
+                        }}
+                        className="rounded-md border"
+                        onDayClick={handleDaySelect}
+                        selected={selectedDate ? selectedDate : undefined}
+                      />
+                    </div>
+                    
+                    <div className="mt-6 md:hidden">
+                      <h3 className="font-semibold mb-4">Renewals This Month</h3>
+                      {calendarEvents
+                        .filter(event => 
+                          event.date.getMonth() === currentMonth.getMonth() && 
+                          event.date.getFullYear() === currentMonth.getFullYear()
+                        )
+                        .sort((a, b) => a.date.getTime() - b.date.getTime())
+                        .map((event, index) => (
+                          <div 
+                            key={index} 
+                            className={`mb-4 p-4 rounded-lg border ${
+                              selectedDate && event.date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0]
+                                ? 'bg-primary/10 border-primary'
+                                : 'bg-card'
+                            }`}
+                            onClick={() => setSelectedDate(event.date)}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="font-medium">
+                                {event.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {event.subscriptions.length} {event.subscriptions.length === 1 ? 'renewal' : 'renewals'}
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              {event.subscriptions.map((sub, idx) => (
+                                <div key={idx} className="flex justify-between items-center py-2 px-4 rounded bg-background">
+                                  <div>{sub.name}</div>
+                                  <div className="font-medium text-primary">${sub.price.toFixed(2)}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      
+                      {calendarEvents.filter(event => 
+                        event.date.getMonth() === currentMonth.getMonth() && 
+                        event.date.getFullYear() === currentMonth.getFullYear()
+                      ).length === 0 && (
+                        <div className="text-center py-6 text-muted-foreground">
+                          No renewals scheduled for this month.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Right side - Selected date details */}
+                  <div className="hidden md:block">
+                    {selectedDate ? (
+                      <div className="h-full border rounded-md p-4">
+                        <div className="mb-4 border-b pb-3">
+                          <h3 className="text-lg font-semibold">
+                            {selectedDate.toLocaleDateString('en-US', { 
+                              weekday: 'long', 
+                              month: 'long', 
+                              day: 'numeric',
+                              year: 'numeric' 
+                            })}
+                          </h3>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-sm text-muted-foreground">SUBSCRIPTION RENEWALS</h4>
+                          
+                          {getEventsForDate(selectedDate).length > 0 ? (
+                            <div className="space-y-3">
+                              {getEventsForDate(selectedDate).map((sub, idx) => (
+                                <div key={idx} className="border p-3 rounded-md hover:bg-muted/30 transition-colors">
+                                  <div className="flex justify-between items-center">
+                                    <div className="font-medium">{sub.name}</div>
+                                    <div className="text-primary font-bold">${sub.price.toFixed(2)}</div>
+                                  </div>
+                                  {allSubscriptions.find(s => s._id === sub.id)?.description && (
+                                    <div className="text-sm text-muted-foreground mt-1">
+                                      {allSubscriptions.find(s => s._id === sub.id)?.description}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              
+                              <div className="pt-2 border-t mt-4">
+                                <div className="flex justify-between items-center">
+                                  <div className="font-medium">Total</div>
+                                  <div className="font-bold">
+                                    ${getEventsForDate(selectedDate)
+                                      .reduce((sum, sub) => sum + sub.price, 0)
+                                      .toFixed(2)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-6 text-muted-foreground">
+                              No subscription renewals for this date.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-full border rounded-md p-6 flex flex-col items-center justify-center text-center text-muted-foreground">
+                        <Calendar className="h-10 w-10 text-primary/40 mb-2" />
+                        <p>Select a highlighted date on the calendar to view subscription renewals.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
     </div>
   )
