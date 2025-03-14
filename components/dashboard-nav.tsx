@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { CalendarClock, CreditCard, Home, LogOut, PlusCircle, Settings, BarChart3 } from "lucide-react"
+import { CalendarClock, CreditCard, Home, LogOut, PlusCircle, Settings, BarChart3, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
@@ -34,6 +34,11 @@ const navItems = [
     title: "Settings",
     href: "/dashboard/settings",
     icon: Settings,
+  },
+  {
+    title: "Security",
+    href: "/dashboard/security",
+    icon: Shield,
   },
 ]
 

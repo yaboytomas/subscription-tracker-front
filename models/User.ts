@@ -8,6 +8,13 @@ export interface INotificationPreferences {
   monthlyReports: boolean; // Whether to send monthly spending reports
 }
 
+// Interface for security preferences
+export interface ISecurityPreferences {
+  twoFactorEnabled: boolean; // Whether 2FA is enabled
+  loginNotifications: boolean; // Whether to send login notifications
+  alwaysRequire2FA: boolean; // Whether to always require 2FA on login
+}
+
 export interface IUser extends mongoose.Document {
   name: string;
   email: string;
@@ -16,6 +23,8 @@ export interface IUser extends mongoose.Document {
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   notificationPreferences?: INotificationPreferences;
+  securityPreferences?: ISecurityPreferences;
+  previousEmail?: string; // To store previous email when changed
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -68,6 +77,23 @@ const UserSchema = new mongoose.Schema<IUser>(
         default: true,
       },
     },
+    securityPreferences: {
+      twoFactorEnabled: {
+        type: Boolean,
+        default: false,
+      },
+      loginNotifications: {
+        type: Boolean,
+        default: true,
+      },
+      alwaysRequire2FA: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    previousEmail: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
@@ -85,9 +111,9 @@ UserSchema.pre('save', async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
     console.log('Password hashed successfully');
     next();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error hashing password:', error);
-    next(error);
+    next(error as Error);
   }
 });
 
