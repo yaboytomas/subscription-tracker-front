@@ -80,14 +80,23 @@ const rowVariants = {
     opacity: 1, 
     y: 0,
     transition: {
-      duration: 0.3,
+      duration: 0.2,
       ease: "easeOut"
     }
   },
   hover: {
     backgroundColor: "hsl(var(--accent))",
     transition: {
-      duration: 0.2
+      duration: 0.15
+    }
+  },
+  new: {
+    opacity: 1,
+    y: 0,
+    backgroundColor: "hsl(var(--primary) / 0.2)",
+    transition: {
+      duration: 0.2,
+      ease: "easeOut"
     }
   }
 }
@@ -118,6 +127,7 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
     billingCycle?: string;
     startDate?: string;
   }>({})
+  const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null)
 
   // Fetch subscriptions from the API
   useEffect(() => {
@@ -136,6 +146,20 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
         
         if (data.success) {
           setSubscriptionList(data.subscriptions || []);
+          
+          // Check if any subscription was recently added
+          if (data.subscriptions && data.subscriptions.length > 0) {
+            // If we have a newly added ID, find it in the list
+            if (newlyAddedId) {
+              const foundNewSub = data.subscriptions.find((sub: Subscription) => sub._id === newlyAddedId);
+              if (foundNewSub) {
+                // Clear the newlyAddedId after 1.5 seconds
+                setTimeout(() => {
+                  setNewlyAddedId(null);
+                }, 1500);
+              }
+            }
+          }
         } else {
           throw new Error(data.message || 'Failed to fetch subscriptions');
         }
@@ -153,7 +177,7 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
     };
     
     fetchSubscriptions();
-  }, [toast]);
+  }, [toast, newlyAddedId]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -324,31 +348,32 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
       const data = await response.json();
       
       if (data.success) {
-        // Add the new subscription to the list
-        setSubscriptionList([...subscriptionList, data.subscription]);
-        
-        // Reset form and close dialog
+        // Reset form
         setNewSubscription({
           name: "",
           price: "",
           category: "",
           billingCycle: "",
-          startDate: "",
+          startDate: new Date().toISOString().split('T')[0],
           description: "",
         });
         setFormErrors({});
         
+        // Close dialog
         setIsAddDialogOpen(false);
+        
+        // Set newly added ID to trigger animation
+        if (data.subscription && data.subscription._id) {
+          setNewlyAddedId(data.subscription._id);
+        }
         
         toast({
           title: "Subscription added",
           description: "Your new subscription has been added successfully.",
         });
         
-        // Refresh dashboard data
-        if (refreshData) {
-          refreshData();
-        }
+        // Refresh the subscriptions list
+        if (refreshData) refreshData();
       } else {
         throw new Error(data.message || 'Failed to create subscription');
       }
@@ -732,7 +757,7 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
                 key={subscription._id}
                 variants={rowVariants}
                 initial="hidden"
-                animate="visible"
+                animate={newlyAddedId === subscription._id ? "new" : "visible"}
                 transition={{ delay: index * 0.05 }}
                 className="border rounded-lg p-4 bg-card"
               >
@@ -837,7 +862,7 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
                     key={subscription._id}
                     variants={rowVariants}
                     initial="hidden"
-                    animate="visible"
+                    animate={newlyAddedId === subscription._id ? "new" : "visible"}
                     transition={{ delay: index * 0.05 }}
                     whileHover="hover"
                     className="group"
