@@ -97,11 +97,12 @@ export function DashboardNav() {
 
   return (
     <>
-      {/* Mobile Top Navigation Bar */}
+      {/* Mobile Navigation Bar */}
       <div className="md:hidden flex items-center justify-between w-full border-b bg-background p-2 sticky top-16 z-40">
+        {/* Left side - Hamburger menu */}
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
@@ -142,36 +143,20 @@ export function DashboardNav() {
           </SheetContent>
         </Sheet>
         
-        {/* Current page title */}
+        {/* Center - Current page title */}
         <div className="font-medium">
           {navItems.find(item => item.href === pathname)?.title || 'Dashboard'}
         </div>
         
-        {/* Empty div for layout balance */}
-        <div className="w-8"></div>
-      </div>
-      
-      {/* Mobile tab indicators */}
-      <div className="md:hidden flex overflow-x-auto w-full border-b bg-muted/30">
-        {navItems.map((item, index) => (
-          <Link 
-            key={index} 
-            href={item.href} 
-            className="flex-shrink-0"
-          >
-            <div
-              className={cn(
-                "flex flex-col items-center px-4 py-2 text-xs",
-                pathname === item.href 
-                  ? "border-b-2 border-primary font-medium text-primary" 
-                  : "text-muted-foreground"
-              )}
-            >
-              <item.icon className="h-4 w-4 mb-1" />
-              <span>{item.title}</span>
-            </div>
+        {/* Right side - Quick access icons */}
+        <div className="flex items-center">
+          <Link href="/dashboard/subscriptions/new">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <PlusCircle className="h-5 w-5" />
+              <span className="sr-only">Add Subscription</span>
+            </Button>
           </Link>
-        ))}
+        </div>
       </div>
       
       {/* Desktop sidebar navigation */}
