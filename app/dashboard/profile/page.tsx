@@ -87,7 +87,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="container px-4 sm:px-6 max-w-5xl">
+    <div className="container px-4 sm:px-6 w-full max-w-full md:max-w-5xl">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">Profile</h1>

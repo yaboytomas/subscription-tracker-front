@@ -73,7 +73,7 @@ export default function NewSubscriptionPage() {
   }
 
   return (
-    <div className="container px-4 sm:px-6 mx-auto max-w-2xl">
+    <div className="container px-4 sm:px-6 w-full max-w-full md:max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
         <Link href="/dashboard/subscriptions" passHref>
           <Button variant="ghost" size="icon" className="h-8 w-8">

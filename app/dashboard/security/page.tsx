@@ -296,7 +296,7 @@ export default function SecuritySettings() {
   
   return (
     <motion.div 
-      className="container px-4 sm:px-6 max-w-4xl py-8"
+      className="container px-4 sm:px-6 w-full max-w-full md:max-w-4xl py-8"
       initial="hidden"
       animate="visible"
       variants={containerVariants}

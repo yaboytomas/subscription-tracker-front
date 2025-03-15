@@ -7,6 +7,7 @@ import { DashboardNav } from "@/components/dashboard-nav"
 import { UserNav } from "@/components/user-nav"
 import { ModeToggle } from "@/components/mode-toggle"
 import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -14,6 +15,25 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Detect if we're on mobile
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    // Initial check
+    checkIsMobile()
+    
+    // Add resize listener
+    window.addEventListener('resize', checkIsMobile)
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkIsMobile)
+    }
+  }, [])
   
   return (
     <div className="flex min-h-screen flex-col">
@@ -39,9 +59,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
       </motion.header>
+      
+      {/* Mobile Navigation appears here at the top only on mobile */}
+      {isMobile && <DashboardNav />}
+      
+      {/* Main content area - conditionally styled for mobile */}
       <div className="flex flex-1">
-        <DashboardNav />
-        <main className="flex-1 p-6">{children}</main>
+        {/* Desktop sidebar is only shown on desktop */}
+        {!isMobile && <DashboardNav />}
+        <main className={`flex-1 ${isMobile ? 'p-2 pt-0' : 'p-6'}`}>{children}</main>
       </div>
     </div>
   )

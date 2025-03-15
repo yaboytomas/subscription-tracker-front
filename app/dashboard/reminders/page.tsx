@@ -350,7 +350,7 @@ export default function RemindersPage() {
   };
 
   return (
-    <div className="container px-4 sm:px-6 max-w-7xl py-6 md:py-8 space-y-6 md:space-y-8">
+    <div className="container px-4 sm:px-6 w-full max-w-full md:max-w-5xl py-6 md:py-8 space-y-6 md:space-y-8">
       {/* Header - Using styling from subscriptions page */}
       <div className="bg-card border border-border shadow-sm rounded-lg p-4 md:p-6 mb-6 md:mb-8">
         <div className="flex items-center gap-3 mb-2">

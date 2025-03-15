@@ -2,12 +2,17 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { CalendarClock, CreditCard, Home, LogOut, PlusCircle, Settings, BarChart3, Shield } from "lucide-react"
+import { CalendarClock, CreditCard, Home, LogOut, PlusCircle, Settings, BarChart3, Shield, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { LogoutAnimation } from "@/components/logout-animation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 const navItems = [
   {
@@ -47,6 +52,7 @@ export function DashboardNav() {
   const router = useRouter()
   const { toast } = useToast()
   const [showLogoutAnimation, setShowLogoutAnimation] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const handleLogout = async () => {
     try {
@@ -91,9 +97,86 @@ export function DashboardNav() {
 
   return (
     <>
-      <div className="group flex w-16 flex-col border-r bg-background p-2 md:w-60">
+      {/* Mobile Top Navigation Bar */}
+      <div className="md:hidden flex items-center justify-between w-full border-b bg-background p-2 sticky top-16 z-40">
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[240px] p-4">
+            <div className="flex flex-col gap-4 mt-4">
+              <h2 className="text-lg font-semibold mb-2">Menu</h2>
+              {navItems.map((item, index) => (
+                <Link 
+                  key={index} 
+                  href={item.href} 
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <div
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                      pathname === item.href 
+                        ? "bg-primary/10 text-primary" 
+                        : "hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </div>
+                </Link>
+              ))}
+              <div
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-accent hover:text-destructive cursor-pointer"
+                onClick={() => {
+                  setMenuOpen(false)
+                  handleLogout()
+                }}
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        {/* Current page title */}
+        <div className="font-medium">
+          {navItems.find(item => item.href === pathname)?.title || 'Dashboard'}
+        </div>
+        
+        {/* Empty div for layout balance */}
+        <div className="w-8"></div>
+      </div>
+      
+      {/* Mobile tab indicators */}
+      <div className="md:hidden flex overflow-x-auto w-full border-b bg-muted/30">
+        {navItems.map((item, index) => (
+          <Link 
+            key={index} 
+            href={item.href} 
+            className="flex-shrink-0"
+          >
+            <div
+              className={cn(
+                "flex flex-col items-center px-4 py-2 text-xs",
+                pathname === item.href 
+                  ? "border-b-2 border-primary font-medium text-primary" 
+                  : "text-muted-foreground"
+              )}
+            >
+              <item.icon className="h-4 w-4 mb-1" />
+              <span>{item.title}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+      
+      {/* Desktop sidebar navigation */}
+      <div className="hidden md:flex w-16 flex-col border-r bg-background p-2 md:w-60">
         <div className="flex flex-col gap-2">
-          
           <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
             {navItems.map((item, index) => (
               <Link key={index} href={item.href} legacyBehavior passHref>

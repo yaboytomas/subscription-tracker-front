@@ -186,7 +186,7 @@ export default function EditSubscriptionPage({ params }: { params: { id: string 
   }
 
   return (
-    <div className="container px-4 sm:px-6 mx-auto max-w-2xl">
+    <div className="container px-4 sm:px-6 w-full max-w-full md:max-w-2xl">
       <div className="flex flex-col gap-2 mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Edit Subscription</h1>
         <p className="text-muted-foreground">Update the details of your subscription.</p>
