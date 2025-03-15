@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SubscriptionDialogProvider } from "@/context/subscription-dialog-context"
 import { SubscriptionFormDialog } from "@/components/subscription-form-dialog"
 import { Toaster } from "@/components/ui/toaster"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { cn } from "@/lib/utils"
 
 const geistSans = localFont({
@@ -63,6 +64,7 @@ export default function RootLayout({
             {children}
             <SubscriptionFormDialog />
             <Toaster />
+            <SpeedInsights />
           </SubscriptionDialogProvider>
         </ThemeProvider>
       </body>
