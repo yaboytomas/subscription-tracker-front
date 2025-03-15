@@ -349,19 +349,19 @@ export default function Home() {
       
       <footer className="border-t py-12 bg-background">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col gap-8">
-            <div className="space-y-4">
+          <div className="flex flex-col gap-8 items-center text-center">
+            <div className="space-y-4 flex flex-col items-center">
               <div className="flex items-center gap-2 font-bold text-2xl">
                 <span className="text-primary">Sub</span>
                 <span>0</span>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground max-w-md">
                 Take control of your subscriptions and save money with our smart tracking tools.
               </p>
             </div>
             
-            <div className="grid grid-cols-3 gap-4 md:grid-cols-3">
-              <div>
+            <div className="grid grid-cols-3 gap-4 md:grid-cols-3 w-full max-w-md">
+              <div className="text-center">
                 <h3 className="font-semibold text-sm md:text-base">Product</h3>
                 <ul className="mt-2 space-y-1 text-xs md:text-sm text-muted-foreground">
                   <li><Link href="#" className="hover:text-primary transition-colors">Features</Link></li>
@@ -370,7 +370,7 @@ export default function Home() {
                 </ul>
               </div>
               
-              <div>
+              <div className="text-center">
                 <h3 className="font-semibold text-sm md:text-base">Company</h3>
                 <ul className="mt-2 space-y-1 text-xs md:text-sm text-muted-foreground">
                   <li><Link href="#" className="hover:text-primary transition-colors">About</Link></li>
@@ -379,7 +379,7 @@ export default function Home() {
                 </ul>
               </div>
               
-              <div>
+              <div className="text-center">
                 <h3 className="font-semibold text-sm md:text-base">Legal</h3>
                 <ul className="mt-2 space-y-1 text-xs md:text-sm text-muted-foreground">
                   <li><Link href="#" className="hover:text-primary transition-colors">Terms</Link></li>
