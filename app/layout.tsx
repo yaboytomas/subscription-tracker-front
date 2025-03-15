@@ -26,6 +26,11 @@ export const metadata: Metadata = {
     default: "Sub0 - Smart Subscription Tracker & Manager",
     template: "%s | Sub0"
   },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1
+  },
   description: "Take control of your finances. Track all your subscriptions in one place, get timely reminders before charges, and save money by identifying unused services.",
   keywords: ['subscription tracker', 'subscription management', 'bill tracking', 'payment reminders', 'subscription analytics'],
   authors: [

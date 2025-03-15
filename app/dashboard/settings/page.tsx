@@ -121,6 +121,29 @@ export default function SettingsPage() {
   const [showPasswordChangeSuccess, setShowPasswordChangeSuccess] = useState(false)
   const [showEmailChangeSuccess, setShowEmailChangeSuccess] = useState(false)
 
+  // Add this for the avatar
+  const [userInitials, setUserInitials] = useState("UN")
+
+  useEffect(() => {
+    // Set meta viewport tag for mobile responsiveness
+    const viewportMeta = document.createElement('meta')
+    viewportMeta.name = 'viewport'
+    viewportMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1'
+    document.head.appendChild(viewportMeta)
+    
+    // Cleanup
+    return () => {
+      document.head.removeChild(viewportMeta)
+    }
+  }, [])
+  
+  // Use this to get initials for avatar
+  useEffect(() => {
+    if (formData.name) {
+      setUserInitials(getInitials(formData.name))
+    }
+  }, [formData.name])
+
   // Fetch user data when component mounts
   useEffect(() => {
     const fetchUserData = async () => {
@@ -415,8 +438,6 @@ export default function SettingsPage() {
       .toUpperCase()
       .substring(0, 2);
   };
-
-  const userInitials = getInitials(formData.name);
 
   // Handle account deletion
   const handleDeleteAccount = async () => {
@@ -902,7 +923,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container px-4 sm:px-6 w-full max-w-full md:max-w-5xl py-8 space-y-8">
+    <div className="container px-4 sm:px-6 w-full max-w-full md:max-w-5xl py-8 space-y-8 overflow-hidden">
       <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="bg-primary/10 p-2 rounded-full">
@@ -913,7 +934,7 @@ export default function SettingsPage() {
         <p className="text-muted-foreground pl-12">Manage your account settings and preferences.</p>
       </div>
 
-      <div className="grid gap-8">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         {/* Personal Information */}
         <Card className="border border-border shadow-sm overflow-hidden">
           <CardHeader className="pb-4 border-b bg-primary/5">
@@ -938,7 +959,7 @@ export default function SettingsPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-0">
                 {/* Profile Header - Avatar and Basic Info */}
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 flex flex-col md:flex-row items-center md:items-start gap-6">
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 sm:p-6 flex flex-col md:flex-row items-center md:items-start gap-4 sm:gap-6">
                   <div className="flex flex-col items-center gap-4 relative">
                     <div className="relative group">
                       <Avatar className="h-28 w-28 border-4 border-background shadow-md">
@@ -974,8 +995,8 @@ export default function SettingsPage() {
                 </div>
                 
                 {/* Profile Form */}
-                <div className="p-6 space-y-6">
-                  <div className="grid gap-6 sm:grid-cols-2">
+                <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                  <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="name" className="font-medium text-sm">
                         Full Name
@@ -1027,7 +1048,7 @@ export default function SettingsPage() {
                       rows={3} 
                       value={formData.bio} 
                       onChange={handleChange}
-                      className="border-primary/20 focus:ring-primary resize-none transition-all" 
+                      className="border-primary/20 focus:ring-primary resize-none transition-all w-full" 
                       placeholder="Tell us a little about yourself"
                     />
                     <p className="text-xs text-muted-foreground">
@@ -1040,7 +1061,7 @@ export default function SettingsPage() {
                   <Button 
                     type="submit" 
                     disabled={isLoading}
-                    className="bg-primary hover:bg-primary/90 transition-colors"
+                    className="bg-primary hover:bg-primary/90 transition-colors w-full sm:w-auto"
                   >
                     {isLoading ? (
                       <span className="flex items-center">
