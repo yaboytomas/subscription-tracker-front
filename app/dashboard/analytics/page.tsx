@@ -82,6 +82,23 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("spending")
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Detect if we're on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Set initial value
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // For generating spending trend data
   const [spendingHistory, setSpendingHistory] = useState<any[]>([])
@@ -357,15 +374,15 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="container max-w-5xl py-8 space-y-8">
-        <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
+      <div className="container px-4 sm:px-6 max-w-5xl py-6 md:py-8 space-y-6 md:space-y-8">
+        <div className="bg-card border border-border shadow-sm rounded-lg p-4 md:p-6 mb-6 md:mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="bg-primary/10 p-2 rounded-full">
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Analytics</h1>
           </div>
-          <p className="text-muted-foreground pl-12">Loading your subscription analytics...</p>
+          <p className="text-sm md:text-base text-muted-foreground pl-10 md:pl-12">Loading your subscription analytics...</p>
         </div>
       </div>
     );
@@ -373,18 +390,18 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="container max-w-5xl py-8 space-y-8">
-        <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
+      <div className="container px-4 sm:px-6 max-w-5xl py-6 md:py-8 space-y-6 md:space-y-8">
+        <div className="bg-card border border-border shadow-sm rounded-lg p-4 md:p-6 mb-6 md:mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="bg-primary/10 p-2 rounded-full">
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Analytics</h1>
           </div>
-          <p className="text-muted-foreground pl-12">Error: {error}</p>
+          <p className="text-sm md:text-base text-muted-foreground pl-10 md:pl-12">Error: {error}</p>
           <Button 
             variant="outline" 
-            className="mt-4 ml-12"
+            className="mt-4 ml-10 md:ml-12"
             onClick={() => window.location.reload()}
           >
             Retry
@@ -395,16 +412,16 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="container max-w-5xl py-8 space-y-8">
+    <div className="container px-4 sm:px-6 max-w-5xl py-6 md:py-8 space-y-6 md:space-y-8">
       {/* Header Section */}
-      <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
+      <div className="bg-card border border-border shadow-sm rounded-lg p-4 md:p-6 mb-6 md:mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="bg-primary/10 p-2 rounded-full">
             <BarChart3 className="h-5 w-5 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Analytics</h1>
         </div>
-        <p className="text-muted-foreground pl-12">Comprehensive insights about your subscription spending and usage patterns.</p>
+        <p className="text-sm md:text-base text-muted-foreground pl-10 md:pl-12">Comprehensive insights about your subscription spending and usage patterns.</p>
       </div>
 
       {/* Key Metrics Section */}
@@ -597,44 +614,46 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Tabs for different analytics views */}
-      <Card className="border border-border shadow-sm">
-        <CardHeader className="pb-2 border-b">
-          <Tabs defaultValue="spending" onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="spending">
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Spending Analysis</span>
-                  <span className="inline sm:hidden ml-1 text-xs">Spending</span>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="breakdown">
-                <div className="flex items-center">
-                  <PieChartIcon className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Category Breakdown</span>
-                  <span className="inline sm:hidden ml-1 text-xs">Categories</span>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="trends">
-                <div className="flex items-center">
-                  <TrendingUp className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Spending Trends</span>
-                  <span className="inline sm:hidden ml-1 text-xs">Trends</span>
-                </div>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+      <Card className="border border-border shadow-sm overflow-hidden">
+        <CardHeader className="pb-3 md:pb-4 border-b bg-primary/5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <Tabs defaultValue="spending" onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="spending">
+                  <div className="flex items-center">
+                    <DollarSign className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Spending Analysis</span>
+                    <span className="inline sm:hidden ml-1 text-xs">Spending</span>
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="breakdown">
+                  <div className="flex items-center">
+                    <PieChartIcon className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Category Breakdown</span>
+                    <span className="inline sm:hidden ml-1 text-xs">Categories</span>
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="trends">
+                  <div className="flex items-center">
+                    <TrendingUp className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Spending Trends</span>
+                    <span className="inline sm:hidden ml-1 text-xs">Trends</span>
+                  </div>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent className="pt-4 md:pt-6 px-4 md:px-6 pb-4 md:pb-6">
           {activeTab === "spending" && (
-            <div className="space-y-6">
-              <div className="flex flex-col space-y-2">
-                <h3 className="text-lg font-semibold">Monthly Spending Breakdown</h3>
-                <p className="text-sm text-muted-foreground">Your subscription costs shown as monthly figures.</p>
+            <div className="space-y-4 md:space-y-6">
+              <div className="flex flex-col space-y-1 md:space-y-2">
+                <h3 className="text-base md:text-lg font-semibold">Monthly Spending Breakdown</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">Your subscription costs shown as monthly figures.</p>
               </div>
 
               {/* Spending visualization - simple for now */}
-              <div className="bg-background rounded-md p-4 border">
+              <div className="bg-background rounded-md p-3 md:p-4 border">
                 <div className="space-y-4">
                   {Object.entries(categoryBreakdown)
                     .sort(([, a], [, b]) => b - a)
@@ -657,7 +676,7 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Key insights */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <HoverCard>
                   <HoverCardTrigger asChild>
                     <div className="cursor-pointer h-full">
@@ -839,27 +858,33 @@ export default function AnalyticsPage() {
 
           {activeTab === "breakdown" && (
             <div className="space-y-6">
-              <div className="flex flex-col space-y-2">
-                <h3 className="text-lg font-semibold">Category Distribution ({new Date().getFullYear()})</h3>
-                <p className="text-sm text-muted-foreground">How your current subscriptions are distributed across categories.</p>
+              <div className="flex flex-col space-y-1 md:space-y-2">
+                <h3 className="text-base md:text-lg font-semibold">Category Distribution ({new Date().getFullYear()})</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">How your current subscriptions are distributed across categories.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Category distribution pie chart */}
-                <div className="bg-background rounded-md p-4 border h-64">
+                <div className="bg-background rounded-md p-3 md:p-4 border h-64 md:h-72">
                   {categoryPieData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                         <Pie
                           data={categoryPieData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
+                          innerRadius={isMobile ? 40 : 60}
+                          outerRadius={isMobile ? 60 : 80}
                           paddingAngle={2}
                           dataKey="value"
-                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                          labelLine={false}
+                          label={({ name, percent }) => {
+                            if (isMobile) {
+                              return percent > 0.1 ? `${(percent * 100).toFixed(0)}%` : '';
+                            } else {
+                              return `${name} (${(percent * 100).toFixed(0)}%)`;
+                            }
+                          }}
+                          labelLine={!isMobile}
                         >
                           {categoryPieData.map((entry, index) => (
                             <Cell 
@@ -988,13 +1013,13 @@ export default function AnalyticsPage() {
 
           {activeTab === "trends" && (
             <div className="space-y-6">
-              <div className="flex flex-col space-y-2">
-                <h3 className="text-lg font-semibold">Subscription Trends ({new Date().getFullYear()})</h3>
-                <p className="text-sm text-muted-foreground">Your subscription spending throughout the current year.</p>
+              <div className="flex flex-col space-y-1 md:space-y-2">
+                <h3 className="text-base md:text-lg font-semibold">Subscription Trends ({new Date().getFullYear()})</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">Your subscription spending throughout the current year.</p>
               </div>
 
               {/* Spending trend line chart */}
-              <div className="bg-background rounded-md p-4 border h-64">
+              <div className="bg-background rounded-md p-3 md:p-4 border h-64 md:h-72">
                 {spendingHistory.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     {(() => {
@@ -1004,21 +1029,25 @@ export default function AnalyticsPage() {
                             data={spendingHistory}
                             margin={{
                               top: 5,
-                              right: 30,
-                              left: 20,
-                              bottom: 5,
+                              right: 20,
+                              left: isMobile ? 10 : 20,
+                              bottom: 20,
                             }}
                           >
                             <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#333' : '#eee'} />
                             <XAxis 
                               dataKey="name" 
-                              tick={{ fontSize: 12 }} 
+                              tick={{ fontSize: isMobile ? 10 : 12 }} 
                               stroke={theme === 'dark' ? '#aaa' : '#666'} 
+                              height={isMobile ? 30 : 40}
+                              angle={isMobile ? -45 : 0}
+                              tickMargin={isMobile ? 10 : 5}
                             />
                             <YAxis 
-                              tick={{ fontSize: 12 }}
+                              tick={{ fontSize: isMobile ? 10 : 12 }}
                               stroke={theme === 'dark' ? '#aaa' : '#666'}
                               tickFormatter={(value) => `$${value}`}
+                              width={isMobile ? 40 : 60}
                             />
                             <Tooltip content={<CustomTooltip />} />
                             <Line
@@ -1064,9 +1093,9 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Upcoming payments */}
-              <div className="flex flex-col space-y-2 mt-6">
-                <h3 className="text-lg font-semibold">Upcoming Payments</h3>
-                <p className="text-sm text-muted-foreground">Payments due in the next 30 days.</p>
+              <div className="flex flex-col space-y-1 md:space-y-2 mt-4 md:mt-6">
+                <h3 className="text-base md:text-lg font-semibold">Upcoming Payments</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">Payments due in the next 30 days.</p>
               </div>
 
               <div className="space-y-3">

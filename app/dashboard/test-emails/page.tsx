@@ -558,7 +558,7 @@ Report details:
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container px-4 sm:px-6 max-w-5xl py-10">
       <h1 className="text-3xl font-bold mb-6">Email Testing Page</h1>
       <p className="text-muted-foreground mb-8">
         Use this page to test the monthly spending report emails and cron job.

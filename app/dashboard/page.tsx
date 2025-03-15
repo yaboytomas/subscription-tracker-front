@@ -28,15 +28,6 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
 
-// Simplified animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { 
-    opacity: 1,
-    transition: { duration: 0.3 }
-  }
-};
-
 export default function DashboardPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -185,7 +176,7 @@ export default function DashboardPage() {
   
   if (loading) {
     return (
-      <div className="container max-w-7xl py-8 space-y-8">
+      <div className="container px-4 sm:px-6 max-w-7xl py-8 space-y-8">
         <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="bg-primary/10 p-2 rounded-full">
@@ -204,7 +195,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container max-w-7xl py-8 space-y-8">
+    <div className="container px-4 sm:px-6 max-w-7xl py-8 space-y-8">
       {/* Header Section */}
       <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
         <div className="flex items-center gap-3 mb-2">

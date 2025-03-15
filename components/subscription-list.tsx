@@ -724,108 +724,179 @@ export function SubscriptionList({ isAddDialogOpen, setIsAddDialogOpen, refreshD
           </Button>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[220px]">
-                  <Button variant="ghost" onClick={() => handleSort("name")} className="font-medium">
-                    Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("price")} className="font-medium">
-                    Price
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="hidden md:table-cell">
-                  <Button variant="ghost" onClick={() => handleSort("billingCycle")} className="font-medium">
-                    Billing Cycle
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="hidden md:table-cell">
-                  <Button variant="ghost" onClick={() => handleSort("nextPayment")} className="font-medium">
-                    Next Payment
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="hidden lg:table-cell">
-                  <Button variant="ghost" onClick={() => handleSort("category")} className="font-medium">
-                    Category
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedSubscriptions.map((subscription, index) => (
-                <motion.tr
-                  key={subscription._id}
-                  variants={rowVariants}
-                  initial="hidden"
-                  animate="visible"
-                  transition={{ delay: index * 0.05 }}
-                  whileHover="hover"
-                  className="group"
-                >
-                  <TableCell className="font-medium">
-                    <div>
-                      <div>{subscription.name}</div>
-                      <div className="text-xs text-muted-foreground lg:hidden">{subscription.category}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div>${parseFloat(subscription.price).toFixed(2)}</div>
-                      <div className="text-xs text-muted-foreground md:hidden">{subscription.billingCycle}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{subscription.billingCycle}</TableCell>
-                  <TableCell className="hidden md:table-cell">{formatDate(subscription.nextPayment)}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{subscription.category}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => setEditingSubscription(subscription)}
-                          className="text-blue-500 focus:text-blue-500"
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDeleteId(subscription._id);
-                            setIsDeleteDialogOpen(true);
-                            console.log("Opening delete dialog for subscription:", subscription.name);
-                          }}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </motion.tr>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <>
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {sortedSubscriptions.map((subscription, index) => (
+              <motion.div
+                key={subscription._id}
+                variants={rowVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: index * 0.05 }}
+                className="border rounded-lg p-4 bg-card"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="font-medium text-base">{subscription.name}</div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onClick={() => setEditingSubscription(subscription)}
+                        className="text-blue-500 focus:text-blue-500"
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDeleteId(subscription._id);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <div className="text-muted-foreground">Price:</div>
+                    <div className="font-medium">${parseFloat(subscription.price).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Billing Cycle:</div>
+                    <div>{subscription.billingCycle}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Next Payment:</div>
+                    <div>{formatDate(subscription.nextPayment)}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Category:</div>
+                    <div>{subscription.category}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden md:block rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[220px]">
+                    <Button variant="ghost" onClick={() => handleSort("name")} className="font-medium">
+                      Name
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort("price")} className="font-medium">
+                      Price
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    <Button variant="ghost" onClick={() => handleSort("billingCycle")} className="font-medium">
+                      Billing Cycle
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    <Button variant="ghost" onClick={() => handleSort("nextPayment")} className="font-medium">
+                      Next Payment
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    <Button variant="ghost" onClick={() => handleSort("category")} className="font-medium">
+                      Category
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedSubscriptions.map((subscription, index) => (
+                  <motion.tr
+                    key={subscription._id}
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{ delay: index * 0.05 }}
+                    whileHover="hover"
+                    className="group"
+                  >
+                    <TableCell className="font-medium">
+                      <div>
+                        <div>{subscription.name}</div>
+                        <div className="text-xs text-muted-foreground lg:hidden">{subscription.category}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div>${parseFloat(subscription.price).toFixed(2)}</div>
+                        <div className="text-xs text-muted-foreground md:hidden">{subscription.billingCycle}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">{subscription.billingCycle}</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatDate(subscription.nextPayment)}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{subscription.category}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => setEditingSubscription(subscription)}
+                            className="text-blue-500 focus:text-blue-500"
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setDeleteId(subscription._id);
+                              setIsDeleteDialogOpen(true);
+                              console.log("Opening delete dialog for subscription:", subscription.name);
+                            }}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
     </>
   )

@@ -350,16 +350,16 @@ export default function RemindersPage() {
   };
 
   return (
-    <div className="container max-w-5xl py-8 space-y-8">
+    <div className="container px-4 sm:px-6 max-w-7xl py-6 md:py-8 space-y-6 md:space-y-8">
       {/* Header - Using styling from subscriptions page */}
-      <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
+      <div className="bg-card border border-border shadow-sm rounded-lg p-4 md:p-6 mb-6 md:mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="bg-primary/10 p-2 rounded-full">
             <Bell className="h-5 w-5 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Reminders</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Reminders</h1>
         </div>
-        <p className="text-muted-foreground pl-12">Track your upcoming subscription payments and never miss a renewal.</p>
+        <p className="text-sm md:text-base text-muted-foreground pl-10 md:pl-12">Track your upcoming subscription payments and never miss a renewal.</p>
       </div>
 
       {/* Loading and error states */}
@@ -380,14 +380,15 @@ export default function RemindersPage() {
         </div>
       ) : (
         /* View toggle and content */
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
+        <div className="space-y-4 md:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <h2 className="text-lg font-semibold">Payment Reminders</h2>
             <div className="flex items-center space-x-2">
               <Button
                 variant={view === 'list' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setView('list')}
+                className="flex-1 sm:flex-initial"
               >
                 List View
               </Button>
@@ -395,6 +396,7 @@ export default function RemindersPage() {
                 variant={view === 'calendar' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setView('calendar')}
+                className="flex-1 sm:flex-initial"
               >
                 Calendar View
               </Button>
@@ -404,8 +406,8 @@ export default function RemindersPage() {
           {view === 'list' ? (
             /* List view - Original content with Card styling from subscriptions page */
             <Card className="border border-border shadow-sm overflow-hidden">
-              <CardHeader className="pb-4 border-b bg-primary/5">
-                <div className="flex items-center justify-between">
+              <CardHeader className="pb-3 md:pb-4 border-b bg-primary/5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
                     <div>
@@ -415,8 +417,8 @@ export default function RemindersPage() {
                   </div>
                   
                   <div className="flex space-x-1">
-                    <Tabs value={activeTab} onValueChange={setActiveTab}>
-                      <TabsList>
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+                      <TabsList className="w-full grid grid-cols-2 sm:w-auto sm:inline-flex">
                         <TabsTrigger value="upcoming">
                           Upcoming
                         </TabsTrigger>
@@ -432,7 +434,7 @@ export default function RemindersPage() {
               <CardContent className="p-0">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsContent value="upcoming">
-                    <div className="p-6">
+                    <div className="p-4 md:p-6">
                       {upcomingReminders.length === 0 ? (
                         <div className="text-center py-6">
                           <p className="text-muted-foreground">You have no upcoming renewals in the current month.</p>
@@ -440,10 +442,10 @@ export default function RemindersPage() {
                       ) : (
                         <div className="divide-y">
                           {upcomingReminders.map(reminder => (
-                            <div key={reminder.id} className="py-4 flex items-center justify-between">
+                            <div key={reminder.id} className="py-3 md:py-4 flex items-center justify-between">
                               <div>
                                 <div className="font-medium">{reminder.name}</div>
-                                <div className="text-sm text-muted-foreground">Due on {reminder.date}</div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Due on {reminder.date}</div>
                               </div>
                               <div className="font-medium text-primary">${reminder.price.toFixed(2)}</div>
                             </div>
@@ -454,7 +456,7 @@ export default function RemindersPage() {
                   </TabsContent>
                   
                   <TabsContent value="past">
-                    <div className="p-6">
+                    <div className="p-4 md:p-6">
                       {currentMonthPayments.length === 0 ? (
                         <div className="text-center py-6">
                           <p className="text-muted-foreground">No payments for the current month yet.</p>
@@ -462,10 +464,10 @@ export default function RemindersPage() {
                       ) : (
                         <div className="divide-y">
                           {currentMonthPayments.map(payment => (
-                            <div key={payment.id} className="py-4 flex items-center justify-between">
+                            <div key={payment.id} className="py-3 md:py-4 flex items-center justify-between">
                               <div>
                                 <div className="font-medium">{payment.name}</div>
-                                <div className="text-sm text-muted-foreground">Paid on {payment.date}</div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Paid on {payment.date}</div>
                               </div>
                               <div className="font-medium text-green-600">${payment.price.toFixed(2)}</div>
                             </div>
@@ -480,8 +482,8 @@ export default function RemindersPage() {
           ) : (
             /* Calendar view */
             <Card className="border border-border shadow-sm overflow-hidden">
-              <CardHeader className="pb-4 border-b bg-primary/5">
-                <div className="flex items-center justify-between">
+              <CardHeader className="pb-3 md:pb-4 border-b bg-primary/5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
                     <div>
@@ -491,23 +493,23 @@ export default function RemindersPage() {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" onClick={handlePreviousMonth}>
+                    <Button variant="outline" size="sm" onClick={handlePreviousMonth} className="px-2 h-8 sm:h-9">
                       <ArrowLeft className="h-4 w-4" />
                     </Button>
-                    <div className="font-medium">
+                    <div className="font-medium text-sm md:text-base whitespace-nowrap">
                       {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                     </div>
-                    <Button variant="outline" size="sm" onClick={handleNextMonth}>
+                    <Button variant="outline" size="sm" onClick={handleNextMonth} className="px-2 h-8 sm:h-9">
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-6">
+              <CardContent className="p-3 md:p-4">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-4 md:gap-6">
                   <div className="flex flex-col">
-                    <div className="calendar-container">
+                    <div className="calendar-container text-sm md:text-base">
                       <CalendarComponent
                         mode="default"
                         month={currentMonth}
@@ -524,8 +526,8 @@ export default function RemindersPage() {
                       />
                     </div>
                     
-                    <div className="mt-6 md:hidden">
-                      <h3 className="font-semibold mb-4">Renewals This Month</h3>
+                    <div className="mt-4 md:mt-6 md:hidden">
+                      <h3 className="font-semibold mb-3 text-sm md:text-base">Renewals This Month</h3>
                       {calendarEvents
                         .filter(event => 
                           event.date.getMonth() === currentMonth.getMonth() && 
@@ -535,7 +537,7 @@ export default function RemindersPage() {
                         .map((event, index) => (
                           <div 
                             key={index} 
-                            className={`mb-4 p-4 rounded-lg border ${
+                            className={`mb-3 p-3 rounded-lg border ${
                               selectedDate && event.date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0]
                                 ? 'bg-primary/10 border-primary'
                                 : 'bg-card'
@@ -543,18 +545,18 @@ export default function RemindersPage() {
                             onClick={() => setSelectedDate(event.date)}
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <div className="font-medium">
-                                {event.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                              <div className="font-medium text-sm">
+                                {event.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                               </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="text-xs text-muted-foreground">
                                 {event.subscriptions.length} {event.subscriptions.length === 1 ? 'renewal' : 'renewals'}
                               </div>
                             </div>
                             <div className="space-y-2">
                               {event.subscriptions.map((sub, idx) => (
-                                <div key={idx} className="flex justify-between items-center py-2 px-4 rounded bg-background">
-                                  <div>{sub.name}</div>
-                                  <div className="font-medium text-primary">${sub.price.toFixed(2)}</div>
+                                <div key={idx} className="flex justify-between items-center py-2 px-3 rounded bg-background text-sm">
+                                  <div className="truncate mr-2">{sub.name}</div>
+                                  <div className="font-medium text-primary whitespace-nowrap">${sub.price.toFixed(2)}</div>
                                 </div>
                               ))}
                             </div>
@@ -565,7 +567,7 @@ export default function RemindersPage() {
                         event.date.getMonth() === currentMonth.getMonth() && 
                         event.date.getFullYear() === currentMonth.getFullYear()
                       ).length === 0 && (
-                        <div className="text-center py-6 text-muted-foreground">
+                        <div className="text-center py-4 text-muted-foreground text-sm">
                           No renewals scheduled for this month.
                         </div>
                       )}

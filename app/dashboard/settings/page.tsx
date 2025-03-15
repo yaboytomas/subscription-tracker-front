@@ -902,7 +902,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container max-w-5xl py-8 space-y-8">
+    <div className="container px-4 sm:px-6 max-w-5xl py-8 space-y-8">
       <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="bg-primary/10 p-2 rounded-full">

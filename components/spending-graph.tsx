@@ -275,36 +275,12 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center">
-              <motion.div 
-                className="rounded-full h-[200px] w-[200px] border-8 border-gray-200"
-                initial={{ rotate: 0, borderTopColor: colors[0] }}
-                animate={{ 
-                  rotate: 360,
-                  borderTopColor: colors[0]
-                }}
-                transition={{ 
-                  duration: 1.5, 
-                  repeat: Infinity, 
-                  ease: "linear"
-                }}
-              >
-                <motion.div 
-                  className="h-full w-full rounded-full flex items-center justify-center"
-                  initial={{ scale: 0.6, opacity: 0.4 }}
-                  animate={{ scale: 1, opacity: 0.8 }}
-                  transition={{ 
-                    duration: 1.2, 
-                    repeat: Infinity, 
-                    repeatType: "reverse",
-                    ease: "easeInOut"
-                  }}
-                >
-                  <DollarSign className="h-12 w-12 text-primary opacity-50" />
-                </motion.div>
-              </motion.div>
-            </div>
-            <div className="mt-4 text-center">
-              <div className="text-sm font-medium opacity-70">Loading spending data...</div>
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" role="status">
+                  <span className="sr-only">Loading...</span>
+                </div>
+                <p className="mt-4 text-muted-foreground">Loading spending data...</p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -314,25 +290,12 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
             <CardTitle className="text-sm font-medium">Spending Over Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] flex items-center justify-center flex-col">
-              <div className="w-full h-[220px] flex items-end justify-around px-10">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="bg-primary/30 w-8 rounded-t"
-                    initial={{ height: 0 }}
-                    animate={{ height: [0, Math.random() * 100 + 20, 0] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: i * 0.1,
-                      ease: "easeInOut"
-                    }}
-                  />
-                ))}
-              </div>
-              <div className="mt-4 w-full border-t border-gray-200 text-center pt-4">
-                <div className="text-sm font-medium opacity-70">Loading chart data...</div>
+            <div className="h-[300px] flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" role="status">
+                  <span className="sr-only">Loading...</span>
+                </div>
+                <p className="mt-4 text-muted-foreground">Loading chart data...</p>
               </div>
             </div>
           </CardContent>
@@ -362,8 +325,7 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
                   animationBegin={0}
-                  animationDuration={1200}
-                  animationEasing="ease-out"
+                  animationDuration={1500}
                   isAnimationActive={true}
                 >
                   {data.length > 0 ? (
@@ -398,24 +360,13 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
           </div>
           <motion.div 
             className="mt-4 text-center"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
           >
             <div className="text-sm font-medium">Total Monthly Spending</div>
-            <motion.div 
-              className="text-2xl font-bold"
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
-              transition={{ 
-                delay: 1.2,
-                duration: 0.5,
-                type: "spring",
-                stiffness: 200
-              }}
-            >
+            <div className="text-2xl font-bold">
               ${totalSpending.toFixed(2)}
-            </motion.div>
+            </div>
             <div className="text-xs text-muted-foreground">Click for details</div>
           </motion.div>
         </CardContent>
@@ -477,7 +428,7 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                   barSize={30}
                   radius={[4, 4, 0, 0]}
                   animationBegin={0}
-                  animationDuration={1200}
+                  animationDuration={1500}
                   animationEasing="ease-out"
                   isAnimationActive={true}
                 >
