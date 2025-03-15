@@ -54,14 +54,14 @@ export function ResponsiveNav() {
     <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b shadow-sm">
       <div className="flex h-16 items-center justify-between px-4">
         <div 
-          className="flex items-center gap-2 font-bold text-2xl cursor-pointer"
+          className="flex items-center font-bold text-2xl cursor-pointer"
           onClick={handleLogoClick}
         >
           <span className="text-primary">Sub</span>
           <span>0</span>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <ModeToggle />
           {isLoggedIn ? (
             <Link href="/dashboard">
@@ -70,7 +70,7 @@ export function ResponsiveNav() {
           ) : (
             <>
               <Link href="/login">
-                <Button variant="outline" size="sm">Login</Button>
+                <Button variant="outline" size="sm" className="mr-1">Login</Button>
               </Link>
               <Link href="/signup">
                 <Button size="sm">Sign Up</Button>

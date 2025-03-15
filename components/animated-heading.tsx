@@ -49,7 +49,7 @@ export default function AnimatedHeading() {
       animate={isInView ? "visible" : "hidden"}
       variants={container}
     >
-      <div className="flex flex-wrap">
+      <div className="flex flex-wrap justify-center sm:justify-start">
         {words.map((word, index) => (
           <motion.span
             key={index}

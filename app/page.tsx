@@ -81,22 +81,22 @@ export default function Home() {
           <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-secondary/10 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
           
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container mx-auto px-4 sm:px-6 relative z-10">
             <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-12 xl:grid-cols-[1fr_1fr]">
               <AnimatedContentComponent>
-                <div className="flex flex-col justify-center space-y-6">
+                <div className="flex flex-col justify-center space-y-6 text-center sm:text-left">
                   <div className="space-y-3">
-                    <div className="inline-flex items-center rounded-full border bg-background/80 backdrop-blur-sm px-4 py-1.5 text-sm font-medium shadow-sm">
+                    <div className="inline-block sm:inline-flex mx-auto sm:mx-0 items-center rounded-full border bg-background/80 backdrop-blur-sm px-4 py-1.5 text-sm font-medium shadow-sm">
                       <span className="mr-2 text-primary">✨</span>
                       Smart subscription management
                     </div>
                     <AnimatedHeading />
-                    <p className="max-w-[600px] text-lg text-muted-foreground">
+                    <p className="max-w-[600px] text-lg text-muted-foreground mx-auto sm:mx-0">
                       Track all your subscriptions in one place. Get reminders before you&apos;re charged and save money by
                       identifying unused services. Your financial peace of mind starts here.
                     </p>
                   </div>
-                  <div className="flex flex-col gap-4 min-[400px]:flex-row">
+                  <div className="flex flex-col gap-4 min-[400px]:flex-row sm:justify-start justify-center">
                     <Link href="/signup">
                       <Button size="lg" className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg">
                         Start Saving Today
@@ -109,7 +109,7 @@ export default function Home() {
                       </Button>
                     </Link>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 sm:flex sm:items-center sm:gap-6">
+                  <div className="grid grid-cols-2 gap-4 sm:flex sm:items-center sm:gap-6 justify-center sm:justify-start">
                     {[
                       { text: "Free forever", icon: <Shield className="h-4 w-4 text-primary" /> },
                       { text: "No credit card", icon: <CreditCard className="h-4 w-4 text-primary" /> },
@@ -349,7 +349,7 @@ export default function Home() {
       
       <footer className="border-t py-12 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+          <div className="flex flex-col gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2 font-bold text-2xl">
                 <span className="text-primary">Sub</span>
@@ -360,31 +360,33 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="space-y-4">
-              <h3 className="font-semibold">Product</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-primary transition-colors">Features</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Pricing</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">FAQ</Link></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="font-semibold">Company</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-primary transition-colors">About</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Blog</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Careers</Link></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="font-semibold">Legal</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-primary transition-colors">Terms</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Privacy</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Cookies</Link></li>
-              </ul>
+            <div className="grid grid-cols-3 gap-4 md:grid-cols-3">
+              <div>
+                <h3 className="font-semibold text-sm md:text-base">Product</h3>
+                <ul className="mt-2 space-y-1 text-xs md:text-sm text-muted-foreground">
+                  <li><Link href="#" className="hover:text-primary transition-colors">Features</Link></li>
+                  <li><Link href="#" className="hover:text-primary transition-colors">Pricing</Link></li>
+                  <li><Link href="#" className="hover:text-primary transition-colors">FAQ</Link></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-sm md:text-base">Company</h3>
+                <ul className="mt-2 space-y-1 text-xs md:text-sm text-muted-foreground">
+                  <li><Link href="#" className="hover:text-primary transition-colors">About</Link></li>
+                  <li><Link href="#" className="hover:text-primary transition-colors">Blog</Link></li>
+                  <li><Link href="#" className="hover:text-primary transition-colors">Careers</Link></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-sm md:text-base">Legal</h3>
+                <ul className="mt-2 space-y-1 text-xs md:text-sm text-muted-foreground">
+                  <li><Link href="#" className="hover:text-primary transition-colors">Terms</Link></li>
+                  <li><Link href="#" className="hover:text-primary transition-colors">Privacy</Link></li>
+                  <li><Link href="#" className="hover:text-primary transition-colors">Cookies</Link></li>
+                </ul>
+              </div>
             </div>
           </div>
           
