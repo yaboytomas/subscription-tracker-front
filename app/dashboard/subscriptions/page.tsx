@@ -5,8 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SubscriptionList } from "@/components/subscription-list"
 import { Button } from "@/components/ui/button"
 import { CreditCard, PlusCircle, ListChecks } from "lucide-react"
+import { useSubscriptionDialog } from "@/context/subscription-dialog-context"
 
 export default function SubscriptionsPage() {
+  const { openAddDialog } = useSubscriptionDialog()
+  
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   return (
@@ -34,7 +37,7 @@ export default function SubscriptionsPage() {
             
             <Button
               variant="outline"
-              onClick={() => setIsAddDialogOpen(true)}
+              onClick={openAddDialog}
               className="border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-colors"
             >
               <PlusCircle className="h-4 w-4 mr-2" />

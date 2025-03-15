@@ -13,6 +13,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { useSubscriptionDialog } from "@/context/subscription-dialog-context"
 
 const navItems = [
   {
@@ -53,6 +54,7 @@ export function DashboardNav() {
   const { toast } = useToast()
   const [showLogoutAnimation, setShowLogoutAnimation] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { openAddDialog } = useSubscriptionDialog()
 
   const handleLogout = async () => {
     try {
@@ -150,12 +152,15 @@ export function DashboardNav() {
         
         {/* Right side - Quick access icons */}
         <div className="flex items-center">
-          <Link href="/dashboard/subscriptions/new">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">Add Subscription</span>
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9"
+            onClick={openAddDialog}
+          >
+            <PlusCircle className="h-5 w-5" />
+            <span className="sr-only">Add Subscription</span>
+          </Button>
         </div>
       </div>
       

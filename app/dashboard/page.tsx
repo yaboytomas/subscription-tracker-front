@@ -27,6 +27,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
+import { useSubscriptionDialog } from "@/context/subscription-dialog-context"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   const [subscriptions, setSubscriptions] = useState<any[]>([])
   const [totalMonthlySpending, setTotalMonthlySpending] = useState(0)
   const [upcomingPayments, setUpcomingPayments] = useState<any[]>([])
+  const { openAddDialog } = useSubscriptionDialog()
   
   const refreshData = () => {
     setRefreshTrigger(prev => prev + 1)
@@ -471,7 +473,7 @@ export default function DashboardPage() {
                   <Button 
                     variant="outline" 
                     className="bg-card hover:bg-muted"
-                    onClick={() => router.push('/dashboard/subscriptions/new')}
+                    onClick={openAddDialog}
                   >
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Add Subscription

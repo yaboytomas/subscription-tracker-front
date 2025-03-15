@@ -170,6 +170,23 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect if we're on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Set initial value
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch subscriptions from API
   useEffect(() => {
@@ -313,19 +330,26 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                 <Pie
                   data={data.length > 0 ? data : generateEmptyData()}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
+                  innerRadius={isMobile ? 40 : 60}
+                  outerRadius={isMobile ? 80 : 100}
+                  paddingAngle={4}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
+                  label={({ name, percent }) => {
+                    // Simplify labels on mobile
+                    if (isMobile) {
+                      return percent > 0.1 ? `${(percent * 100).toFixed(0)}%` : '';
+                    } else {
+                      return `${name} ${(percent * 100).toFixed(0)}%`;
+                    }
+                  }}
+                  labelLine={!isMobile}
                   animationBegin={0}
-                  animationDuration={1500}
+                  animationDuration={1000}
                   isAnimationActive={true}
                 >
                   {data.length > 0 ? (
@@ -346,10 +370,13 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                     backgroundColor: isDark ? 'hsl(var(--popover))' : 'white',
                     borderColor: 'hsl(var(--border))',
                     borderRadius: '0.5rem',
-                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))',
+                    padding: isMobile ? '4px 8px' : '8px 12px',
+                    fontSize: isMobile ? '12px' : '14px'
                   }}
                   itemStyle={{
-                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))',
+                    fontSize: isMobile ? '12px' : '14px'
                   }}
                   labelStyle={{ 
                     color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))' 
@@ -383,9 +410,9 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                 data={timeData}
                 margin={{
                   top: 20,
-                  right: 20,
-                  left: 20,
-                  bottom: 20,
+                  right: isMobile ? 10 : 20,
+                  left: isMobile ? 10 : 20,
+                  bottom: isMobile ? 60 : 20,
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -393,18 +420,20 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                   dataKey="month" 
                   tickLine={false} 
                   axisLine={false}
-                  tick={{ fontSize: 12 }}
-                  tickMargin={8}
-                  angle={-45}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                  tickMargin={isMobile ? 10 : 8}
+                  angle={isMobile ? -45 : -45}
                   textAnchor="end"
-                  interval={0}
-                  height={60}
+                  interval={isMobile ? 1 : 0}
+                  height={isMobile ? 70 : 60}
                 />
                 <YAxis 
-                  tickFormatter={value => `$${value}`} 
+                  tickFormatter={value => isMobile ? `$${value}` : `$${value}`} 
                   tickLine={false} 
                   axisLine={false} 
                   domain={[0, 'auto']}
+                  width={isMobile ? 35 : 45}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
                 />
                 <Tooltip
                   formatter={(value: number) => [`$${value.toFixed(2)}`, 'Monthly']}
@@ -412,23 +441,27 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
                     backgroundColor: isDark ? 'hsl(var(--popover))' : 'white',
                     borderColor: 'hsl(var(--border))',
                     borderRadius: '0.5rem',
-                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))',
+                    padding: isMobile ? '4px 8px' : '8px 12px',
+                    fontSize: isMobile ? '12px' : '14px'
                   }}
                   itemStyle={{
-                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))',
+                    padding: isMobile ? '1px 0' : '3px 0',
+                    fontSize: isMobile ? '12px' : '14px'
                   }}
                   labelStyle={{ 
-                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))'
+                    color: isDark ? 'hsl(var(--popover-foreground))' : 'hsl(var(--foreground))' 
                   }}
                 />
                 <Bar 
                   dataKey="amount" 
                   fill={colors[0]}
                   opacity={0.7}
-                  barSize={30}
+                  barSize={isMobile ? 20 : 30}
                   radius={[4, 4, 0, 0]}
                   animationBegin={0}
-                  animationDuration={1500}
+                  animationDuration={1000}
                   animationEasing="ease-out"
                   isAnimationActive={true}
                 >
@@ -453,7 +486,7 @@ export function SpendingGraph({ refreshTrigger = 0 }) {
 
       {/* Category Spending Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className={`sm:max-w-[600px] ${isMobile ? 'p-4' : 'p-6'}`}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />

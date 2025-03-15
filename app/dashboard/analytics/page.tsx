@@ -334,8 +334,8 @@ export default function AnalyticsPage() {
     if (active && payload && payload.length) {
       return (
         <div className="bg-card border rounded-md p-2 shadow-sm">
-          <p className="text-sm font-medium">{`${label} ${payload[0].payload.year}`}</p>
-          <p className="text-sm">{formatCurrency(payload[0].value)}</p>
+          <p className={`${isMobile ? "text-xs" : "text-sm"} font-medium`}>{`${label} ${payload[0].payload.year}`}</p>
+          <p className={isMobile ? "text-xs" : "text-sm"}>{formatCurrency(payload[0].value)}</p>
         </div>
       );
     }
@@ -901,8 +901,8 @@ export default function AnalyticsPage() {
                               const data = payload[0].payload;
                               return (
                                 <div className="bg-card border rounded-md p-2 shadow-sm">
-                                  <p className="text-sm font-medium">{data.name}</p>
-                                  <p className="text-sm">{formatCurrency(data.value)}</p>
+                                  <p className={`${isMobile ? "text-xs" : "text-sm"} font-medium`}>{data.name}</p>
+                                  <p className={isMobile ? "text-xs" : "text-sm"}>{formatCurrency(data.value)}</p>
                                 </div>
                               );
                             }
@@ -1069,7 +1069,7 @@ export default function AnalyticsPage() {
                                   value: "Current",
                                   position: "insideTopRight",
                                   fill: "#ff4081",
-                                  fontSize: 12
+                                  fontSize: isMobile ? 10 : 12
                                 }}
                               />
                             )}

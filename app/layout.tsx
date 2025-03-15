@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SubscriptionDialogProvider } from "@/context/subscription-dialog-context"
+import { SubscriptionFormDialog } from "@/components/subscription-form-dialog"
+import { Toaster } from "@/components/ui/toaster"
+import { cn } from "@/lib/utils"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -55,7 +59,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <SubscriptionDialogProvider>
+            {children}
+            <SubscriptionFormDialog />
+            <Toaster />
+          </SubscriptionDialogProvider>
         </ThemeProvider>
       </body>
     </html>
