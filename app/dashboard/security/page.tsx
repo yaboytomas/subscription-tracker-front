@@ -21,7 +21,6 @@ export default function SecuritySettings() {
   // Security preferences
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [loginNotifications, setLoginNotifications] = useState(true);
-  const [alwaysRequire2FA, setAlwaysRequire2FA] = useState(false);
   
   // 2FA verification
   const [showTwoFactorDialog, setShowTwoFactorDialog] = useState(false);
@@ -67,7 +66,6 @@ export default function SecuritySettings() {
           console.log("User security preferences:", securityPrefs);
           setTwoFactorEnabled(securityPrefs.twoFactorEnabled || false);
           setLoginNotifications(securityPrefs.loginNotifications !== false); // default to true
-          setAlwaysRequire2FA(securityPrefs.alwaysRequire2FA || false); // default to false
           setLoading(false);
         }
       } catch (error) {
@@ -89,8 +87,7 @@ export default function SecuritySettings() {
       // Turning off 2FA - just update settings
       await updateSecuritySettings({ 
         twoFactorEnabled: false, 
-        loginNotifications,
-        alwaysRequire2FA: false // Also disable always require when turning off 2FA
+        loginNotifications
       });
     } else {
       console.log("Initiating 2FA setup process");
@@ -169,8 +166,7 @@ export default function SecuritySettings() {
         // Code verified, update settings
         await updateSecuritySettings({ 
           twoFactorEnabled: true, 
-          loginNotifications,
-          alwaysRequire2FA
+          loginNotifications
         });
         setShowTwoFactorDialog(false);
         setVerificationCode('');
@@ -196,42 +192,19 @@ export default function SecuritySettings() {
     }
   };
   
-  // Handle toggling always require 2FA
-  const handleToggleAlwaysRequire2FA = async () => {
-    console.log("Toggle always require 2FA clicked. Current state:", alwaysRequire2FA);
-    
-    if (!twoFactorEnabled && !alwaysRequire2FA) {
-      setErrorMessage('You need to enable Two-Factor Authentication before requiring it on every login.');
-      toast({
-        title: 'Enable 2FA First',
-        description: 'You need to enable Two-Factor Authentication before requiring it on every login.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    await updateSecuritySettings({ 
-      twoFactorEnabled, 
-      loginNotifications, 
-      alwaysRequire2FA: !alwaysRequire2FA 
-    });
-  };
-  
   // Handle toggling login notifications
   const handleToggleLoginNotifications = async () => {
     console.log("Toggle login notifications clicked. Current state:", loginNotifications);
     await updateSecuritySettings({ 
       twoFactorEnabled, 
-      loginNotifications: !loginNotifications,
-      alwaysRequire2FA 
+      loginNotifications: !loginNotifications
     });
   };
   
   // Update security settings
   const updateSecuritySettings = async (settings: { 
     twoFactorEnabled: boolean, 
-    loginNotifications: boolean,
-    alwaysRequire2FA: boolean 
+    loginNotifications: boolean
   }) => {
     console.log("Updating security settings:", settings);
     
@@ -255,11 +228,9 @@ export default function SecuritySettings() {
       if (data.success) {
         setTwoFactorEnabled(settings.twoFactorEnabled);
         setLoginNotifications(settings.loginNotifications);
-        setAlwaysRequire2FA(settings.alwaysRequire2FA);
         console.log("Security settings updated successfully, new state:", {
           twoFactorEnabled: settings.twoFactorEnabled,
-          loginNotifications: settings.loginNotifications,
-          alwaysRequire2FA: settings.alwaysRequire2FA
+          loginNotifications: settings.loginNotifications
         });
         
         setSuccessMessage('Your security settings have been updated successfully.');
@@ -371,35 +342,6 @@ export default function SecuritySettings() {
                 disabled={saving}
               />
             </motion.div>
-            
-            <AnimatePresence>
-              {twoFactorEnabled && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <motion.div 
-                    className="flex items-center justify-between pl-6 mt-2 p-2 rounded-md"
-                    whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="space-y-0.5">
-                      <h3 className="font-medium">Require 2FA on every login</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Always prompt for 2FA code, even on trusted devices
-                      </p>
-                    </div>
-                    <Switch
-                      checked={alwaysRequire2FA}
-                      onCheckedChange={handleToggleAlwaysRequire2FA}
-                      disabled={saving || !twoFactorEnabled}
-                    />
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
             
             <Separator className="my-4" />
             
