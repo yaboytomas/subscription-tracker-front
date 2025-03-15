@@ -58,25 +58,21 @@ export function DashboardNav() {
 
   const handleLogout = async () => {
     try {
+      // Set the animation state to show the animation
       setShowLogoutAnimation(true)
       
-      // Call the logout API
-      const response = await fetch('/api/auth/logout', {
+      // Prevent any scrolling or interactions while logging out
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = 'hidden'
+      }
+      
+      // Call the logout API in the background
+      fetch('/api/auth/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-      })
-      
-      if (!response.ok) {
-        throw new Error('Logout failed')
-      }
-      
-      // Show toast notification
-      toast({
-        title: "Logged out",
-        description: "You have been logged out successfully.",
-      })
+      }).catch(err => console.error('Logout API error:', err))
       
       // Clear any client-side storage
       if (typeof window !== "undefined") {
@@ -84,11 +80,14 @@ export function DashboardNav() {
         sessionStorage.clear();
       }
       
-      // Force a full page reload to ensure clean state
-      window.location.href = "/";
+      // Let the animation component handle the redirect timing
+      // No need for additional timeouts here
     } catch (error) {
       console.error('Logout error:', error)
       setShowLogoutAnimation(false)
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = ''
+      }
       toast({
         title: "Error",
         description: "Logout failed. Please try again.",
@@ -134,8 +133,30 @@ export function DashboardNav() {
               <div
                 className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-accent hover:text-destructive cursor-pointer"
                 onClick={() => {
+                  // Close menu
                   setMenuOpen(false)
-                  handleLogout()
+                  // Add a delay to ensure the UI updates and drawer is closed first
+                  setTimeout(() => {
+                    // Then show the logout animation (which will block all further interactions)
+                    setShowLogoutAnimation(true)
+                    
+                    // Prevent any scrolling or interactions
+                    if (typeof document !== 'undefined') {
+                      document.body.style.overflow = 'hidden'
+                    }
+                    
+                    // Call the logout API in the background
+                    fetch('/api/auth/logout', { 
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                    }).catch(err => console.error('Logout API error:', err))
+                    
+                    // Clear any client-side storage
+                    if (typeof window !== "undefined") {
+                      localStorage.clear();
+                      sessionStorage.clear();
+                    }
+                  }, 150)
                 }}
               >
                 <LogOut className="h-4 w-4" />

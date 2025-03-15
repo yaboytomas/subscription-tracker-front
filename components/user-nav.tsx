@@ -155,24 +155,21 @@ export function UserNav() {
 
   const handleLogout = async () => {
     try {
+      // Set the animation state to show the animation
       setShowLogoutAnimation(true)
       
-      // Call the logout API
-      const response = await fetch('/api/auth/logout', {
+      // Prevent any scrolling or interactions while logging out
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = 'hidden'
+      }
+      
+      // Call the logout API in the background
+      fetch('/api/auth/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-      
-      toast({
-        title: "Logged out",
-        description: "You have been logged out successfully.",
-      })
+      }).catch(err => console.error('Logout API error:', err))
       
       // Clear any client-side storage
       if (typeof window !== "undefined") {
@@ -180,16 +177,19 @@ export function UserNav() {
         sessionStorage.clear();
       }
       
-      // Force a full page reload to ensure clean state
-      window.location.href = "/";
+      // Let the animation component handle the redirect timing
+      // No need for additional timeouts here
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout error:', error)
       setShowLogoutAnimation(false)
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = ''
+      }
       toast({
         title: "Error",
         description: "Logout failed. Please try again.",
         variant: "destructive",
-      });
+      })
     }
   }
 
